@@ -1,0 +1,6 @@
+{
+  "name": "Udaan — Your Future, Your Way",
+  "description": "AI-powered career discovery and learning-to-livelihood platform designed for rural Indian students and village facilitators.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
