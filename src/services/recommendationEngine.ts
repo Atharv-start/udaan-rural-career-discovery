@@ -1,241 +1,214 @@
-import { Career, DiscoveryAnswers, RecommendationExplanation, StudentProfile } from '../types';
-import { CAREERS_DATA } from '../data/careersData';
+import {
+  Career,
+  CareerResult,
+  DiscoveryAnswers,
+  EvaluatedOpp,
+  Opportunity,
+  RankedCareer,
+  RecommendationExplanation,
+  Student,
+  StudentProfile,
+  TagKey
+} from '../types';
+import { rankCareers, evaluateOpportunities, TAG_LABELS } from './engine';
+import careersJson from '../data/careers.json' with { type: 'json' };
+import opportunitiesJson from '../data/opportunities.json' with { type: 'json' };
+import { getTodayDate } from '../utils/dateHelper';
+
+export const CAREERS_DATA: Career[] = careersJson as unknown as Career[];
+export const OPPORTUNITIES_DATA: Opportunity[] = opportunitiesJson as unknown as Opportunity[];
 
 export interface RecommendationResult {
+  insufficientSignal: boolean;
+  rankedCareers: RankedCareer[];
+  // For backwards compatibility with screens expecting Career[]
   careers: Career[];
   explanations: Record<string, RecommendationExplanation>;
 }
 
+/**
+ * Maps Screen 3 education level to passed class number.
+ * Note: Screen 3 phrases the field as "Current Class or Level" ("वर्तमान कक्षा या स्तर").
+ */
+export function mapEducationLevelToClassPassed(level?: string): number {
+  if (!level) return 10;
+  if (level.includes('Class 8')) return 8;
+  if (level.includes('Class 9')) return 8; // Currently studying in Class 9 -> Class 8 passed
+  if (level.includes('Class 10')) return 10;
+  if (level.includes('Class 11')) return 10; // Studying in Class 11 -> Class 10 passed
+  if (level.includes('Class 12')) return 12;
+  if (level.includes('ITI')) return 10;
+  if (level.includes('Polytechnic')) return 10;
+  if (level.includes('Degree') || level.includes('Graduate')) return 12;
+  return 10;
+}
+
+/**
+ * Maps Screen 5 questionnaire answers to student tags (0-3 scale).
+ * Tags are derived strictly from explicit answers:
+ * - stable_income and earn_while_learning are NOT inferred from careerType.
+ */
+export function mapDiscoveryToTags(discovery?: DiscoveryAnswers): Partial<Record<TagKey, number>> {
+  const tags: Record<TagKey, number> = {
+    hands_on: 0,
+    tech: 0,
+    people: 0,
+    helping: 0,
+    numbers: 0,
+    creative: 0,
+    outdoors: 0,
+    business: 0,
+    stable_income: 0,
+    earn_while_learning: 0,
+  };
+
+  if (!discovery) return {};
+
+  const prefs = new Set(discovery.workPreference || []);
+  const domains = new Set(discovery.workDomain || []);
+
+  // Q1: Daily work preferences
+  if (prefs.has('repairing')) tags.hands_on += 2;
+  if (prefs.has('outdoors')) tags.outdoors += 2;
+  if (prefs.has('helping-people')) {
+    tags.helping += 3;
+    tags.people += 1;
+  }
+  if (prefs.has('creating')) tags.creative += 2;
+  if (prefs.has('problem-solving')) tags.numbers += 3;
+
+  // Q2: Work domains
+  if (domains.has('machines')) {
+    tags.hands_on += 1;
+    tags.tech += 1;
+  }
+  if (domains.has('nature')) tags.outdoors += 2;
+  if (domains.has('people')) {
+    tags.people += 3;
+    tags.helping += 1;
+  }
+  if (domains.has('technology')) tags.tech += 3;
+  if (domains.has('business')) tags.business += 3;
+  if (domains.has('art')) tags.creative += 2;
+
+  // Notice: stable_income and earn_while_learning are intentionally NOT inferred
+  // from careerType per prompt instruction. They are only added if an explicit answer is given.
+
+  const result: Partial<Record<TagKey, number>> = {};
+  (Object.keys(tags) as TagKey[]).forEach(k => {
+    const val = Math.min(3, tags[k]);
+    if (val > 0) result[k] = val;
+  });
+
+  return result;
+}
+
+/**
+ * Converts a StudentProfile into the engine's Student model.
+ * Does not default gender, age, enrolled, canRelocate, or canSupportWithoutIncome.
+ */
+export function mapProfileToStudent(
+  profile: Partial<StudentProfile>,
+  discovery?: DiscoveryAnswers
+): Student {
+  const classPassed = profile.classPassed ?? mapEducationLevelToClassPassed(profile.educationLevel);
+  const state = (profile.state || 'uttar_pradesh').toLowerCase().replace(/\s+/g, '_');
+
+  const student: Student = {
+    classPassed,
+    state,
+    tags: mapDiscoveryToTags(discovery)
+  };
+
+  if (profile.canRelocate !== undefined) student.canRelocate = profile.canRelocate;
+  if (profile.canSupportWithoutIncome !== undefined) student.canSupportWithoutIncome = profile.canSupportWithoutIncome;
+  if (profile.age !== undefined) student.age = profile.age;
+  if (profile.gender !== undefined) student.gender = profile.gender;
+  if (profile.enrolled !== undefined) student.enrolled = profile.enrolled;
+  if (profile.hasItiCertificate !== undefined) {
+    student.hasItiCertificate = profile.hasItiCertificate;
+  } else if (profile.educationLevel === 'ITI / Vocational Certificate') {
+    student.hasItiCertificate = true;
+  }
+
+  return student;
+}
+
 export class TransparentRecommendationEngine {
-  /**
-   * Matches careers based on student profile or discovery questionnaire responses.
-   * Uses clear rule intersections rather than opaque black-box scoring.
-   */
   public static recommend(
     student: Partial<StudentProfile>,
     discovery?: DiscoveryAnswers
   ): RecommendationResult {
-    // Collect active user signals
-    const subjects = new Set((student.subjects || []).map(s => s.toLowerCase()));
-    const activities = new Set((student.activities || []).map(a => a.toLowerCase()));
-    const skills = new Set((student.skills || []).map(s => s.toLowerCase()));
+    const engineStudent = mapProfileToStudent(student, discovery);
+    const result: CareerResult = rankCareers(engineStudent, CAREERS_DATA);
 
-    const workPrefs = new Set(discovery?.workPreference || []);
-    const workDomains = new Set(discovery?.workDomain || []);
-    const careerTypePref = discovery?.careerType || 'both';
-
-    const scoredCareers = CAREERS_DATA.map(career => {
-      let matchScore = 0;
-      const matchedInterests: string[] = [];
-      const appliedRules: { en: string; hi: string }[] = [];
-      const influencingInterests: { en: string; hi: string }[] = [];
-
-      // Check vocational preference match
-      if (careerTypePref === 'vocational' && career.isVocational) {
-        matchScore += 3;
-        appliedRules.push({
-          en: 'Prioritized hands-on vocational pathway based on preference',
-          hi: 'आपकी पसंद के अनुसार व्यावहारिक वोकेशनल मार्ग को प्राथमिकता दी गई'
-        });
-      } else if (careerTypePref === 'academic' && !career.isVocational) {
-        matchScore += 3;
-        appliedRules.push({
-          en: 'Matched formal academic qualification pathway',
-          hi: 'औपचारिक शैक्षणिक योग्यता मार्ग से मेल खाता है'
-        });
-      } else {
-        matchScore += 1;
-      }
-
-      // Check direct interest keywords in career tags
-      career.matchedInterests.forEach(tag => {
-        if (workDomains.has(tag)) {
-          matchScore += 4;
-          matchedInterests.push(tag);
-          influencingInterests.push({
-            en: `Interest in ${tag}`,
-            hi: `${tag === 'technology' ? 'तकनीक' : tag === 'nature' ? 'प्रकृति' : tag === 'machines' ? 'मशीनें' : tag === 'people' ? 'लोग' : tag === 'art' ? 'कला' : 'व्यवसाय'} में रुचि`
-          });
-        }
-        if (workPrefs.has(tag)) {
-          matchScore += 3;
-          matchedInterests.push(tag);
-        }
-      });
-
-      // Check subject alignments
-      subjects.forEach(sub => {
-        if (
-          (sub.includes('science') || sub.includes('physics')) &&
-          (career.id.includes('solar') || career.id.includes('surveyor') || career.id.includes('mobile'))
-        ) {
-          matchScore += 2;
-          appliedRules.push({
-            en: `Applied Science alignment for ${career.title}`,
-            hi: `विज्ञान विषय की उपयोगिता के आधार पर मिलान`
-          });
-        }
-        if (
-          (sub.includes('biology') || sub.includes('agriculture')) &&
-          (career.id.includes('farm') || career.id.includes('health') || career.id.includes('veterinary') || career.id.includes('dairy') || career.id.includes('water'))
-        ) {
-          matchScore += 3;
-          appliedRules.push({
-            en: 'Applied Life Science & Biology knowledge requirement',
-            hi: 'जीव विज्ञान एवं कृषि ज्ञान की आवश्यकता के अनुसार मिलान'
-          });
-        }
-        if (
-          (sub.includes('math') || sub.includes('account')) &&
-          (career.id.includes('accounts') || career.id.includes('surveyor') || career.id.includes('banking'))
-        ) {
-          matchScore += 3;
-          appliedRules.push({
-            en: 'Applied Mathematics & Calculation aptitude rule',
-            hi: 'गणित व गणना क्षमता के नियम का अनुप्रयोग'
-          });
-        }
-      });
-
-      // Check skill overlap
-      const existingSkills: { en: string; hi: string }[] = [];
-      career.requiredSkills.forEach(req => {
-        const matchesSkill = Array.from(skills).some(s => 
-          req.en.toLowerCase().includes(s) || req.hi.toLowerCase().includes(s)
-        );
-        if (matchesSkill) {
-          matchScore += 2;
-          existingSkills.push(req);
-        }
-      });
-
-      // Fallback baseline explanation rules if few items matched
-      if (appliedRules.length === 0) {
-        appliedRules.push({
-          en: 'High rural employment demand in village clusters',
-          hi: 'ग्रामीण क्षेत्रों में उच्च रोजगार मांग एवं आजीविका अवसर'
-        });
-      }
-      if (influencingInterests.length === 0) {
-        influencingInterests.push({
-          en: 'Hands-on practical problem solving',
-          hi: 'व्यावहारिक समस्या समाधान एवं कार्य'
-        });
-      }
-
-      // Format clean why-recommended statement
-      const whyRecommended = {
-        en: career.isVocational 
-          ? `Combines practical hands-on work with immediate earning potential without requiring expensive city coaching.`
-          : `Aligns with your education and service motivation, offering high social respect and stable growth in rural districts.`,
-        hi: career.isVocational
-          ? `महंगे शहर के कोचिंग के बिना व्यावहारिक काम सीखकर जल्दी आत्मनिर्भर बनने का सशक्त अवसर।`
-          : `आपकी पढ़ाई और सेवा भावना के अनुकूल, गांव-कस्बे में सामाजिक प्रतिष्ठा और स्थिर प्रगति।`
-      };
-
-      const explanation: RecommendationExplanation = {
-        careerId: career.id,
-        careerTitle: career.title,
-        careerTitleHi: career.titleHi,
-        whyRecommended,
-        influencingInterests,
-        appliedRules,
-        studentExistingSkills: existingSkills.length > 0 
-          ? existingSkills 
-          : [{ en: 'Fundamental literacy & eagerness to learn', hi: 'सीखने की गहरी ललक एवं बुनियादी समझ' }],
-        skillsToDevelop: career.requiredSkills.slice(0, 3),
-        recommendedNextSteps: career.pathwaySteps.map(p => ({
-          en: `${p.title} (${p.duration})`,
-          hi: `${p.titleHi} (${p.duration})`
-        })),
-        missingInformationNote: {
-          en: student.educationLevel 
-            ? `Recommendation is tailored for ${student.educationLevel}. You can update your subjects or preferred district anytime to refine this.`
-            : `Add your Class 10/12 marks and state board to unlock location-specific scholarship matches.`,
-          hi: student.educationLevel
-            ? `यह सुझाव ${student.educationLevel} के अनुसार तैयार किया गया है। बेहतर परिणाम के लिए प्रोफाइल में विषय जोड़ सकते हैं।`
-            : `सटीक छात्रवृत्ति मिलान के लिए अपनी कक्षा 10/12 के अंक दर्ज करें।`
-        }
-      };
-
-      return {
-        ...career,
-        matchScore,
-        matchExplanation: whyRecommended.en,
-        matchExplanationHi: whyRecommended.hi,
-        _explanation: explanation
-      };
-    });
-
-    // Sort by match score descending
-    scoredCareers.sort((a, b) => b.matchScore - a.matchScore);
-
-    // Pick top 3 distinct careers (ensuring at least 1 vocational is included per prompt guidelines)
-    const topThree: Career[] = [];
     const explanations: Record<string, RecommendationExplanation> = {};
 
-    // Check if at least one vocational career is included
-    const firstTwo = scoredCareers.slice(0, 2);
-    topThree.push(...firstTwo);
+    result.careers.forEach(rc => {
+      const c = rc.career;
+      const strengthsMatched = rc.matched.length;
 
-    const hasVocational = topThree.some(c => c.isVocational);
-    if (!hasVocational) {
-      const bestVocational = scoredCareers.find(c => c.isVocational && !topThree.some(t => t.id === c.id));
-      if (bestVocational) {
-        topThree.push(bestVocational);
-      } else if (scoredCareers[2]) {
-        topThree.push(scoredCareers[2]);
-      }
-    } else if (scoredCareers[2]) {
-      topThree.push(scoredCareers[2]);
-    }
+      const whyRecommended = {
+        en: strengthsMatched > 0
+          ? `Matched ${strengthsMatched} strength${strengthsMatched > 1 ? 's' : ''} (${rc.matched.map(m => TAG_LABELS[m.tag as TagKey]?.en || m.tag).join(', ')}) with a suitability score of ${rc.score}/${rc.maxScore}.`
+          : `Recommended based on eligibility for Class ${c.minClass} qualification.`,
+        hi: strengthsMatched > 0
+          ? `आपकी ${strengthsMatched} खूबियों (${rc.matched.map(m => TAG_LABELS[m.tag as TagKey]?.hi || m.tag).join(', ')}) से मेल, उपयुक्तता स्कोर ${rc.score}/${rc.maxScore}।`
+          : `कक्षा ${c.minClass} की पात्रता के आधार पर अनुशंसित।`
+      };
 
-    // Build explanations map
-    scoredCareers.forEach(c => {
-      if ((c as any)._explanation) {
-        explanations[c.id] = (c as any)._explanation;
-      }
+      const appliedRules = [
+        {
+          en: `DGT CTS Official Letter (Dec 2024): Min Class ${c.minClass}, ${c.durationMonths} months`,
+          hi: `डीजीटी सीटीएस आधिकारिक अधिसूचना (दिसंबर 2024): न्यूनतम कक्षा ${c.minClass}, ${c.durationMonths} माह`
+        },
+        ...rc.warnings.map(w => ({ en: `Notice: ${w.en}`, hi: `सूचना: ${w.hi}` }))
+      ];
+
+      explanations[c.id] = {
+        careerId: c.id,
+        careerTitle: c.nameEn,
+        careerTitleHi: c.nameHi,
+        whyRecommended,
+        influencingInterests: rc.matched.map(m => m.text),
+        appliedRules,
+        studentExistingSkills: rc.matched.map(m => ({
+          en: `${TAG_LABELS[m.tag as TagKey]?.en || m.tag} (Strength: ${m.studentStrength}/3)`,
+          hi: `${TAG_LABELS[m.tag as TagKey]?.hi || m.tag} (क्षमता: ${m.studentStrength}/3)`
+        })),
+        skillsToDevelop: [
+          { en: `Practical trade skills for ${c.nameEn}`, hi: `${c.nameHi} हेतु ट्रेड प्रैक्टिकल कौशल` },
+          { en: 'Workshop safety and tool maintenance', hi: 'कार्यशाला सुरक्षा एवं टूल रखरखाव' }
+        ],
+        recommendedNextSteps: c.pathway.map((step, idx) => ({
+          en: `Step ${idx + 1}: ${step}`,
+          hi: `चरण ${idx + 1}: ${step}`
+        })),
+        missingInformationNote: {
+          en: 'You can update your interests in Career Discovery anytime to refine these recommendations.',
+          hi: 'सुझावों को अधिक सटीक बनाने के लिए आप कभी भी करियर खोज में रुचियां बदल सकते हैं।'
+        }
+      };
     });
 
     return {
-      careers: topThree,
+      insufficientSignal: result.insufficientSignal,
+      rankedCareers: result.careers,
+      careers: result.careers.map(rc => rc.career),
       explanations
     };
   }
 }
 
 /**
- * Interface definition for future server-side LLM explanation integration
- * (e.g., via backend route with Gemini SDK). Never exposes keys on client.
+ * Evaluates opportunities for a student with date override support.
  */
-export interface IExplanationService {
-  getExplanation(careerId: string, studentProfile: StudentProfile): Promise<RecommendationExplanation>;
-}
-
-export class LocalTemplateExplanationService implements IExplanationService {
-  async getExplanation(careerId: string, studentProfile: StudentProfile): Promise<RecommendationExplanation> {
-    const result = TransparentRecommendationEngine.recommend(studentProfile);
-    if (result.explanations[careerId]) {
-      return result.explanations[careerId];
-    }
-    const career = CAREERS_DATA.find(c => c.id === careerId) || CAREERS_DATA[0];
-    return {
-      careerId: career.id,
-      careerTitle: career.title,
-      careerTitleHi: career.titleHi,
-      whyRecommended: {
-        en: `Selected based on high rural demand and your foundational interests.`,
-        hi: `आपके बुनियादी विषयों और ग्रामीण क्षेत्र में उच्च मांग के आधार पर चयनित।`
-      },
-      influencingInterests: [{ en: 'Practical skill preference', hi: 'व्यावहारिक हुनर की प्राथमिकता' }],
-      appliedRules: [{ en: 'Community livelihood relevance check', hi: 'सामुदायिक आजीविका प्रासंगिकता' }],
-      studentExistingSkills: [{ en: 'Eagerness to work with community and tools', hi: 'औजारों व लोगों के साथ काम करने का उत्साह' }],
-      skillsToDevelop: career.requiredSkills,
-      recommendedNextSteps: career.pathwaySteps.map(p => ({ en: p.title, hi: p.titleHi })),
-      missingInformationNote: {
-        en: 'Add more details in your profile to refine this explanation further.',
-        hi: 'और अधिक सटीक सुझाव के लिए अपनी प्रोफाइल में और विवरण जोड़ें।'
-      }
-    };
-  }
+export function getEvaluatedOpportunities(
+  profile: Partial<StudentProfile>,
+  discovery?: DiscoveryAnswers,
+  overrideDate?: string
+): EvaluatedOpp[] {
+  const student = mapProfileToStudent(profile, discovery);
+  const today = overrideDate || getTodayDate();
+  return evaluateOpportunities(student, OPPORTUNITIES_DATA, today);
 }

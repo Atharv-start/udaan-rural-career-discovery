@@ -7,9 +7,11 @@ import {
   M3BottomNavBar, 
   AndroidStatusBar 
 } from '../common/MaterialComponents';
-import { OPPORTUNITIES_DATA } from '../../data/opportunitiesData';
-import { CAREERS_DATA } from '../../data/careersData';
-import { TransparentRecommendationEngine } from '../../services/recommendationEngine';
+import {
+  OPPORTUNITIES_DATA,
+  CAREERS_DATA,
+  TransparentRecommendationEngine
+} from '../../services/recommendationEngine';
 import { 
   User, 
   CheckCircle2, 
@@ -57,7 +59,7 @@ export const Screen12FacilitatorStudentDetail: React.FC = () => {
     addFacilitatorRecommendation({
       studentId: student.id,
       opportunityId: chosenOpp.id,
-      opportunityName: language === 'hi' ? chosenOpp.nameHi : chosenOpp.name,
+      opportunityName: language === 'hi' ? chosenOpp.nameHi : chosenOpp.nameEn,
       facilitatorName: mentorName.trim() || 'Village Teacher',
       note: mentorNote.trim() || 'Recommended based on academic performance and local trade suitability.',
       isOfflineSaved: true
@@ -75,9 +77,11 @@ export const Screen12FacilitatorStudentDetail: React.FC = () => {
         showBack={true}
         onBack={() => navigateTo('facilitator_home')}
         readAloudText={
-          language === 'hi'
-            ? `${student.name} का विवरण। कक्षा ${student.educationLevel}। अनुशंसित करियर: ${studentRecCareer.titleHi}।`
-            : `Review profile for ${student.name}. Education: ${student.educationLevel}. Recommended: ${studentRecCareer.title}.`
+          studentRecCareer
+            ? (language === 'hi'
+                ? `${student.name} का विवरण। कक्षा ${student.educationLevel}। अनुशंसित करियर: ${studentRecCareer.nameHi}।`
+                : `Review profile for ${student.name}. Education: ${student.educationLevel}. Recommended: ${studentRecCareer.nameEn}.`)
+            : `${student.name}`
         }
       />
 
@@ -124,23 +128,27 @@ export const Screen12FacilitatorStudentDetail: React.FC = () => {
         </div>
 
         {/* System Recommended Career for this Student */}
-        <section className="bg-white rounded-[20px] p-4 border border-[#21866F]/15">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-[#176B5B] bg-[#DDF3E8] px-2.5 py-0.5 rounded-full">
-            {language === 'hi' ? 'सिस्टम मिलान करियर' : 'AI Match Analysis'}
-          </span>
-          <h3 className="text-sm sm:text-base font-bold text-[#202B27] mt-1.5">
-            {language === 'hi' ? studentRecCareer.titleHi : studentRecCareer.title}
-          </h3>
-          <p className="text-xs text-[#65736C] mt-1">
-            {language === 'hi' ? studentRecCareer.shortDescriptionHi : studentRecCareer.shortDescription}
-          </p>
-          <div className="mt-2.5 p-2 rounded-xl bg-[#FAF8F1] border border-[#21866F]/10 text-xs text-[#202B27]">
-            <span className="font-semibold text-[#176B5B]">
-              {language === 'hi' ? 'मिलान का कारण: ' : 'Match Rule: '}
+        {studentRecCareer && (
+          <section className="bg-white rounded-[20px] p-4 border border-[#21866F]/15">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-[#176B5B] bg-[#DDF3E8] px-2.5 py-0.5 rounded-full">
+              {language === 'hi' ? 'सिस्टम मिलान करियर' : 'AI Match Analysis'}
             </span>
-            {language === 'hi' ? studentRecCareer.matchExplanationHi : studentRecCareer.matchExplanation}
-          </div>
-        </section>
+            <h3 className="text-sm sm:text-base font-bold text-[#202B27] mt-1.5">
+              {language === 'hi' ? studentRecCareer.nameHi : studentRecCareer.nameEn}
+            </h3>
+            <p className="text-xs text-[#65736C] mt-1">
+              {language === 'hi'
+                ? `न्यूनतम कक्षा ${studentRecCareer.minClass} · ${studentRecCareer.durationMonths} माह का कोर्स`
+                : `Min Class ${studentRecCareer.minClass} · ${studentRecCareer.durationMonths} Months Course`}
+            </p>
+            <div className="mt-2.5 p-2 rounded-xl bg-[#FAF8F1] border border-[#21866F]/10 text-xs text-[#202B27]">
+              <span className="font-semibold text-[#176B5B]">
+                {language === 'hi' ? 'सत्यापित स्रोत: ' : 'Verified Source: '}
+              </span>
+              <span>{studentRecCareer.notes}</span>
+            </div>
+          </section>
+        )}
 
         {/* Existing Mentor Recommendations History */}
         {existingNotes.length > 0 && (
@@ -191,9 +199,9 @@ export const Screen12FacilitatorStudentDetail: React.FC = () => {
                     }`}
                   >
                     <div>
-                      <span>{language === 'hi' ? opp.nameHi : opp.name}</span>
+                      <span>{language === 'hi' ? opp.nameHi : opp.nameEn}</span>
                       <span className="block text-[10px] text-[#65736C] font-normal mt-0.5">
-                        {opp.financialBenefit || opp.provider}
+                        {opp.conditions.length > 0 ? opp.conditions.join(', ') : opp.notes}
                       </span>
                     </div>
                     {selectedOppId === opp.id && <Check className="w-4 h-4 text-[#176B5B] shrink-0 ml-2" />}

@@ -7,7 +7,7 @@ import {
   M3BottomNavBar, 
   AndroidStatusBar 
 } from '../common/MaterialComponents';
-import { CAREERS_DATA } from '../../data/careersData';
+import { CAREERS_DATA } from '../../services/recommendationEngine';
 import { TransparentRecommendationEngine } from '../../services/recommendationEngine';
 import { 
   Sparkles, 
@@ -40,15 +40,15 @@ export const Screen10AiExplanation: React.FC = () => {
   const explanation = result.explanations[career.id];
 
   const readText = language === 'hi'
-    ? `सुझाव विश्लेषण: ${career.titleHi}। यह सुझाव आपकी रुचियों और स्थानीय मांग के आधार पर तैयार किया गया है।`
-    : `Recommendation analysis for ${career.title}. Understand why this matches your profile.`;
+    ? `सुझाव विश्लेषण: ${career.nameHi}। यह सुझाव आपकी रुचियों और स्थानीय मांग के आधार पर तैयार किया गया है।`
+    : `Recommendation analysis for ${career.nameEn}. Understand why this matches your profile.`;
 
   return (
     <div className="min-h-screen bg-[#FAF8F1] text-[#202B27] pb-24 max-w-lg mx-auto">
       <AndroidStatusBar />
       <M3TopAppBar
         title={language === 'hi' ? 'सुझाव समझें' : 'Understand Recommendation'}
-        subtitle={language === 'hi' ? career.titleHi : career.title}
+        subtitle={language === 'hi' ? career.nameHi : career.nameEn}
         showBack={true}
         onBack={() => navigateTo('career_results')}
         readAloudText={readText}

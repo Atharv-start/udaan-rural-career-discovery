@@ -1,198 +1,196 @@
 import React from 'react';
 import { useApp } from '../../context/AppContext';
-import { 
-  M3TopAppBar, 
-  M3Button, 
-  M3Card, 
-  M3BottomNavBar, 
-  AndroidStatusBar 
+import {
+  M3TopAppBar,
+  M3Button,
+  M3Card,
+  M3BottomNavBar,
+  AndroidStatusBar
 } from '../common/MaterialComponents';
-import { CAREERS_DATA } from '../../data/careersData';
-import { OPPORTUNITIES_DATA } from '../../data/opportunitiesData';
-import { 
-  CheckCircle2, 
-  HelpCircle, 
-  Route, 
-  BookOpen, 
-  Award, 
-  TrendingUp, 
-  IndianRupee, 
-  Briefcase, 
+import { CAREERS_DATA, OPPORTUNITIES_DATA } from '../../services/recommendationEngine';
+import {
+  Route,
   Sparkles,
-  ArrowRight,
+  ExternalLink,
+  ShieldCheck,
+  AlertTriangle,
+  Clock,
+  GraduationCap,
+  MapPin,
+  HelpCircle,
   Sun,
-  Sprout,
-  Radio,
-  HeartPulse,
-  Monitor,
   Wrench,
+  Monitor,
   Scissors,
-  Droplets
+  Droplets,
+  Building,
+  Zap,
+  Info
 } from 'lucide-react';
 
 export const Screen7CareerDetails: React.FC = () => {
-  const { 
-    language, 
-    selectedCareerId, 
-    navigateTo, 
-    updateStudentProfile, 
-    showSnackbar, 
-    playSpeech 
+  const {
+    language,
+    selectedCareerId,
+    rankedCareers,
+    navigateTo,
+    updateStudentProfile,
+    showSnackbar
   } = useApp();
 
   const career = CAREERS_DATA.find(c => c.id === selectedCareerId) || CAREERS_DATA[0];
+  const ranked = rankedCareers.find(rc => rc.career.id === career.id);
+  const warnings = ranked?.warnings || [];
 
   const handleSetTargetCareer = () => {
     updateStudentProfile({ targetCareerId: career.id });
     showSnackbar(
-      language === 'hi' 
-        ? `${career.titleHi} आपके 'मार्ग' में जोड़ दिया गया` 
-        : `${career.title} added to My Learning Path`
+      language === 'hi'
+        ? `${career.nameHi} आपके 'मार्ग' में जोड़ दिया गया`
+        : `${career.nameEn} added to My Learning Path`
     );
     navigateTo('learning_path');
   };
 
-  const getCareerIcon = (iconName: string) => {
-    switch (iconName) {
-      case 'Sun': return Sun;
-      case 'Sprout': return Sprout;
-      case 'Radio': return Radio;
-      case 'HeartPulse': return HeartPulse;
-      case 'Monitor': return Monitor;
-      case 'Wrench': return Wrench;
-      case 'Scissors': return Scissors;
-      case 'Droplets': return Droplets;
+  const getTradeIcon = (tradeId: string) => {
+    switch (tradeId) {
+      case 'iti_solar_technician': return Sun;
+      case 'iti_wireman': return Zap;
+      case 'iti_plumber': return Droplets;
+      case 'iti_mason': return Building;
+      case 'iti_dress_making': return Scissors;
+      case 'iti_copa': return Monitor;
+      case 'iti_cosmetology': return Sparkles;
+      case 'iti_welder':
+      case 'iti_mech_diesel':
+      case 'iti_mech_two_three_wheeler':
       default: return Wrench;
     }
   };
 
-  const IconComponent = getCareerIcon(career.icon);
+  const IconComponent = getTradeIcon(career.id);
 
-  // Find related opportunities
+  // Related opportunities from verified list
   const relatedOpportunities = OPPORTUNITIES_DATA.filter(opp => {
-    if (career.isVocational && (opp.category === 'vocational' || opp.category === 'apprenticeship')) return true;
-    if (opp.id === 'opp-nmms' || opp.id === 'opp-swayam-free-courses') return true;
+    if (opp.id === 'up_iti_admission_2026' || opp.id === 'naps' || opp.id === 'up_post_matric_scholarship') {
+      return true;
+    }
     return false;
-  }).slice(0, 2);
+  }).slice(0, 3);
 
   const readText = language === 'hi'
-    ? `${career.titleHi}। ${career.shortDescriptionHi}। अपेक्षित आय: ${career.indicativeSalaryHi}।`
-    : `${career.title}. ${career.shortDescription}. Estimated earnings: ${career.indicativeSalary}.`;
+    ? `${career.nameHi}। अवधि: ${career.durationMonths} महीने। न्यूनतम कक्षा: ${career.minClass}।`
+    : `${career.nameEn}. Duration: ${career.durationMonths} months. Minimum education: Class ${career.minClass}.`;
 
   return (
     <div className="min-h-screen bg-[#FAF8F1] text-[#202B27] pb-24 max-w-lg mx-auto">
       <AndroidStatusBar />
       <M3TopAppBar
-        title={language === 'hi' ? career.titleHi : career.title}
-        subtitle={language === 'hi' ? career.categoryHi : career.category}
+        title={language === 'hi' ? career.nameHi : career.nameEn}
+        subtitle={language === 'hi' ? 'आईटीआई ट्रेड' : 'ITI Trade'}
         showBack={true}
         onBack={() => navigateTo('career_results')}
         readAloudText={readText}
       />
 
-      <main className="p-4 space-y-5">
+      <main className="p-4 space-y-4">
         {/* Hero Card */}
         <div className="rounded-[22px] bg-white border border-[#21866F]/20 p-5 shadow-sm">
           <div className="flex items-start gap-4">
             <div className="w-14 h-14 rounded-2xl bg-[#DDF3E8] text-[#176B5B] flex items-center justify-center shrink-0">
               <IconComponent className="w-8 h-8" />
             </div>
-            <div>
+            <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-1">
                 <span className="text-[10px] font-bold uppercase tracking-wider text-[#176B5B] bg-[#DDF3E8] px-2.5 py-0.5 rounded-full">
-                  {language === 'hi' ? career.categoryHi : career.category}
+                  {language === 'hi' ? 'आईटीआई ट्रेड' : 'ITI Trade'}
                 </span>
-                {career.isVocational && (
-                  <span className="text-[10px] font-semibold text-[#202B27] bg-[#F2B544]/30 px-2 py-0.5 rounded-full">
-                    {language === 'hi' ? 'व्यावहारिक हुनर' : 'Vocational'}
-                  </span>
-                )}
+                <span className="text-[10px] font-semibold text-[#202B27] bg-[#F2B544]/30 px-2 py-0.5 rounded-full">
+                  {language === 'hi' ? 'व्यावहारिक हुनर' : 'Vocational'}
+                </span>
               </div>
               <h2 className="text-lg sm:text-xl font-extrabold text-[#202B27] leading-snug">
-                {language === 'hi' ? career.titleHi : career.title}
+                {language === 'hi' ? career.nameHi : career.nameEn}
               </h2>
             </div>
           </div>
 
-          <p className="text-xs sm:text-sm text-[#202B27] mt-3 leading-relaxed">
-            {language === 'hi' ? career.fullDescriptionHi : career.fullDescription}
-          </p>
-
-          {/* Quick Metrics Strip */}
-          <div className="mt-4 pt-3 border-t border-[#21866F]/10 grid grid-cols-2 gap-3 text-xs">
+          {/* Verified Technical Attributes Strip */}
+          <div className="mt-4 pt-3 border-t border-[#21866F]/10 grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs">
             <div className="p-2.5 rounded-xl bg-[#FAF8F1] border border-[#21866F]/10">
               <div className="flex items-center gap-1 text-[#176B5B] font-bold text-[10px] uppercase">
-                <IndianRupee className="w-3.5 h-3.5" />
-                <span>{language === 'hi' ? 'संभावित मासिक आय' : 'Indicative Income'}</span>
+                <GraduationCap className="w-3.5 h-3.5" />
+                <span>{language === 'hi' ? 'न्यूनतम योग्यता' : 'Min Education'}</span>
               </div>
               <p className="text-[#202B27] font-semibold mt-0.5 text-xs">
-                {language === 'hi' ? career.indicativeSalaryHi : career.indicativeSalary}
+                {language === 'hi' ? `कक्षा ${career.minClass} पास` : `Class ${career.minClass} Pass`}
               </p>
             </div>
 
             <div className="p-2.5 rounded-xl bg-[#FAF8F1] border border-[#21866F]/10">
               <div className="flex items-center gap-1 text-[#21866F] font-bold text-[10px] uppercase">
-                <TrendingUp className="w-3.5 h-3.5" />
-                <span>{language === 'hi' ? 'भविष्य की मांग' : 'Growth Scope'}</span>
+                <Clock className="w-3.5 h-3.5" />
+                <span>{language === 'hi' ? 'कोर्स अवधि' : 'Duration'}</span>
               </div>
-              <p className="text-[#202B27] font-semibold mt-0.5 text-xs truncate">
-                {language === 'hi' ? 'उच्च ग्रामीण मांग' : 'High Local Growth'}
+              <p className="text-[#202B27] font-semibold mt-0.5 text-xs">
+                {language === 'hi' ? `${career.durationMonths} महीने` : `${career.durationMonths} Months`}
+              </p>
+            </div>
+
+            <div className="p-2.5 rounded-xl bg-[#FAF8F1] border border-[#21866F]/10 col-span-2 sm:col-span-1">
+              <div className="flex items-center gap-1 text-[#65736C] font-bold text-[10px] uppercase">
+                <MapPin className="w-3.5 h-3.5" />
+                <span>{language === 'hi' ? 'प्रसार दायरा' : 'Scope'}</span>
+              </div>
+              <p className="text-[#202B27] font-semibold mt-0.5 text-xs capitalize">
+                {language === 'hi' && career.stateScope === 'national' ? 'अखिल भारतीय' : career.stateScope}
               </p>
             </div>
           </div>
         </div>
 
-        {/* What they do day-to-day */}
-        <section className="bg-white rounded-[20px] p-5 border border-[#21866F]/15">
-          <h3 className="text-sm font-bold text-[#202B27] uppercase tracking-wider mb-3 flex items-center gap-2">
-            <Briefcase className="w-4 h-4 text-[#176B5B]" />
-            <span>{language === 'hi' ? 'दैनिक कार्य (What They Do)' : 'What The Person Does'}</span>
-          </h3>
-
-          <ul className="space-y-2.5">
-            {career.whatTheyDo.map((item, idx) => (
-              <li key={idx} className="flex items-start gap-2.5 text-xs sm:text-sm text-[#202B27]">
-                <div className="w-5 h-5 rounded-full bg-[#DDF3E8] text-[#176B5B] flex items-center justify-center shrink-0 mt-0.5 text-xs font-bold">
-                  {idx + 1}
-                </div>
-                <span className="leading-relaxed">
-                  {language === 'hi' ? item.hi : item.en}
-                </span>
-              </li>
+        {/* Warnings Banner if student constraints trigger any */}
+        {warnings.length > 0 && (
+          <div className="p-4 rounded-2xl bg-[#FFF9E6] border border-[#F2B544]/40 text-xs text-[#8a6011] space-y-1.5">
+            <div className="flex items-center gap-2 font-bold uppercase tracking-wider text-[11px]">
+              <AlertTriangle className="w-4 h-4 text-[#F2B544] shrink-0" />
+              <span>{language === 'hi' ? 'महत्वपूर्ण सूचना एवं सावधानियां' : 'Important Warnings & Advice'}</span>
+            </div>
+            {warnings.map((w, wi) => (
+              <p key={wi} className="leading-relaxed">
+                {language === 'hi' ? w.hi : w.en}
+              </p>
             ))}
-          </ul>
-        </section>
+          </div>
+        )}
 
-        {/* 4-Step Pathway to Success */}
+        {/* 4-Step Verified Pathway to Success */}
         <section className="bg-white rounded-[20px] p-5 border border-[#21866F]/15">
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-sm font-bold text-[#202B27] uppercase tracking-wider flex items-center gap-2">
               <Route className="w-4 h-4 text-[#176B5B]" />
               <span>{language === 'hi' ? '4-चरणीय करियर मार्ग' : '4-Step Career Pathway'}</span>
             </h3>
-            <span className="text-[10px] text-[#65736C]">
-              {language === 'hi' ? 'प्रमाणित रोडमैप' : 'Step-by-step'}
+            <span className="text-[10px] text-[#176B5B] font-bold bg-[#DDF3E8] px-2 py-0.5 rounded-full">
+              {language === 'hi' ? 'प्रमाणित रोडमैप' : 'Official Route'}
             </span>
           </div>
 
-          <div className="space-y-4 relative before:absolute before:left-3.5 before:top-2 before:bottom-2 before:w-0.5 before:bg-[#21866F]/20">
-            {career.pathwaySteps.map((step) => (
-              <div key={step.step} className="relative flex items-start gap-3.5 pl-1">
+          <div className="space-y-3.5 relative before:absolute before:left-3.5 before:top-2 before:bottom-2 before:w-0.5 before:bg-[#21866F]/20">
+            {career.pathway.map((stepText, idx) => (
+              <div key={idx} className="relative flex items-start gap-3.5 pl-1">
                 <div className="w-7 h-7 rounded-full bg-[#21866F] text-white flex items-center justify-center text-xs font-bold shrink-0 ring-4 ring-white shadow-xs">
-                  {step.step}
+                  {idx + 1}
                 </div>
 
                 <div className="flex-1 min-w-0 bg-[#FAF8F1] p-3 rounded-xl border border-[#21866F]/12">
                   <div className="flex items-center justify-between gap-1 mb-0.5">
                     <h4 className="text-xs sm:text-sm font-bold text-[#202B27]">
-                      {language === 'hi' ? step.titleHi : step.title}
+                      {language === 'hi' ? `चरण ${idx + 1}` : `Step ${idx + 1}`}
                     </h4>
-                    <span className="text-[10px] text-[#176B5B] font-semibold bg-[#DDF3E8] px-2 py-0.5 rounded shrink-0">
-                      {step.duration}
-                    </span>
                   </div>
-                  <p className="text-xs text-[#65736C] leading-relaxed">
-                    {language === 'hi' ? step.descriptionHi : step.description}
+                  <p className="text-xs text-[#202B27] leading-relaxed">
+                    {stepText}
                   </p>
                 </div>
               </div>
@@ -200,42 +198,55 @@ export const Screen7CareerDetails: React.FC = () => {
           </div>
         </section>
 
-        {/* Required Skills & Training */}
+        {/* Verified Data Source & Government Citation Card */}
         <section className="bg-white rounded-[20px] p-5 border border-[#21866F]/15">
-          <h3 className="text-sm font-bold text-[#202B27] uppercase tracking-wider mb-3 flex items-center gap-2">
-            <Award className="w-4 h-4 text-[#176B5B]" />
-            <span>{language === 'hi' ? 'आवश्यक हुनर एवं प्रशिक्षण' : 'Required Skills & Courses'}</span>
-          </h3>
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="text-sm font-bold text-[#202B27] uppercase tracking-wider flex items-center gap-2">
+              <ShieldCheck className="w-4 h-4 text-[#176B5B]" />
+              <span>{language === 'hi' ? 'सरकारी सत्यापन एवं स्रोत' : 'Government Verification & Source'}</span>
+            </h3>
+            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+              career.status === 'verified'
+                ? 'bg-[#DDF3E8] text-[#176B5B]'
+                : 'bg-[#FFF9E6] text-[#8a6011]'
+            }`}>
+              {career.status === 'verified'
+                ? (language === 'hi' ? 'सत्यापित' : 'Verified')
+                : (language === 'hi' ? 'जाँचा नहीं गया' : 'Not Fully Verified')}
+            </span>
+          </div>
 
-          <div className="space-y-3">
-            <div>
-              <span className="text-xs font-semibold text-[#65736C] block mb-1.5">
-                {language === 'hi' ? 'सीखने योग्य मुख्य कौशल:' : 'Essential Technical Skills:'}
-              </span>
-              <div className="flex flex-wrap gap-1.5">
-                {career.requiredSkills.map((sk, i) => (
-                  <span 
-                    key={i}
-                    className="text-xs px-3 py-1 rounded-full bg-[#DDF3E8] text-[#176B5B] font-medium"
-                  >
-                    {language === 'hi' ? sk.hi : sk.en}
-                  </span>
-                ))}
-              </div>
-            </div>
+          {career.status !== 'verified' && (
+            <p className="text-xs text-[#B3261E] bg-red-50 p-2 rounded-lg mb-2">
+              {language === 'hi'
+                ? 'यह ट्रेड विवरण पूरी तरह जाँचा नहीं गया है। आधिकारिक पोर्टल पर पुनः पुष्टि करें।'
+                : 'Not fully verified. Please check the official portal before acting.'}
+            </p>
+          )}
 
-            <div className="pt-2 border-t border-[#21866F]/10">
-              <span className="text-xs font-semibold text-[#65736C] block mb-1.5">
-                {language === 'hi' ? 'मान्यता प्राप्त कोर्स एवं परीक्षाएं:' : 'Recognized Exams / Trades:'}
+          <div className="space-y-2 text-xs text-[#202B27] bg-[#FAF8F1] p-3 rounded-xl border border-[#21866F]/10">
+            <p className="leading-relaxed text-[#65736C]">
+              <span className="font-semibold text-[#202B27]">
+                {language === 'hi' ? 'आधिकारिक स्रोत संदर्भ: ' : 'Official Reference: '}
               </span>
-              <ul className="space-y-1.5">
-                {career.coursesExams.map((exam, i) => (
-                  <li key={i} className="text-xs text-[#202B27] flex items-center gap-2">
-                    <div className="w-1.5 h-1.5 rounded-full bg-[#21866F]" />
-                    <span>{language === 'hi' ? exam.hi : exam.en}</span>
-                  </li>
-                ))}
-              </ul>
+              {career.notes}
+            </p>
+
+            <div className="flex items-center justify-between pt-2 border-t border-[#21866F]/10 text-[11px]">
+              <span className="text-[#65736C]">
+                {language === 'hi' ? `सत्यापन तिथि: ${career.verifiedDate}` : `Verified Date: ${career.verifiedDate}`}
+              </span>
+              {career.sourceUrl && (
+                <a
+                  href={career.sourceUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-bold text-[#176B5B] hover:underline inline-flex items-center gap-1"
+                >
+                  <span>{language === 'hi' ? 'DGT गजट पत्र देखें' : 'View DGT Letter'}</span>
+                  <ExternalLink className="w-3.5 h-3.5" />
+                </a>
+              )}
             </div>
           </div>
         </section>
@@ -264,17 +275,17 @@ export const Screen7CareerDetails: React.FC = () => {
               >
                 <div className="flex items-center justify-between">
                   <span className="text-[10px] font-bold text-[#176B5B] uppercase">
-                    {language === 'hi' ? opp.categoryLabel.hi : opp.categoryLabel.en}
+                    {opp.type}
                   </span>
                   <span className="text-[10px] text-[#65736C]">
-                    {language === 'hi' ? opp.deadlineHi : opp.deadline}
+                    {opp.closesOn ? `Closes: ${opp.closesOn}` : opp.windowStatus}
                   </span>
                 </div>
                 <h4 className="text-xs sm:text-sm font-bold text-[#202B27] mt-0.5">
-                  {language === 'hi' ? opp.nameHi : opp.name}
+                  {language === 'hi' ? opp.nameHi : opp.nameEn}
                 </h4>
                 <p className="text-[11px] text-[#65736C] mt-0.5 line-clamp-1">
-                  {language === 'hi' ? opp.eligibilitySummaryHi : opp.eligibilitySummary}
+                  {opp.conditions.length > 0 ? opp.conditions.join(', ') : opp.notes}
                 </p>
               </div>
             ))}

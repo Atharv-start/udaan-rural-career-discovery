@@ -1,7 +1,7 @@
 export type Language = 'en' | 'hi';
 export type UserRole = 'student' | 'facilitator';
 
-export type EducationLevel = 
+export type EducationLevel =
   | 'Class 9'
   | 'Class 10'
   | 'Class 11'
@@ -30,78 +30,29 @@ export interface StudentProfile {
   completedMilestones: string[];
   currentMilestoneId?: string;
   targetCareerId?: string;
+  classPassed?: number;
+  canRelocate?: boolean;
+  canSupportWithoutIncome?: boolean;
+  age?: number;
+  gender?: 'female' | 'male' | 'other';
+  hasItiCertificate?: boolean;
+  enrolled?: boolean;
 }
 
-export interface PathwayStep {
-  step: number;
-  title: string;
-  titleHi: string;
-  description: string;
-  descriptionHi: string;
-  duration: string;
-  milestoneType: 'understand' | 'foundation' | 'qualification' | 'entry';
-}
+export type {
+  TagKey,
+  Student,
+  Career,
+  Opportunity,
+  OppStatus,
+  Bi,
+  MatchedTag,
+  RankedCareer,
+  CareerResult,
+  EvaluatedOpp
+} from '../services/engine';
 
-export interface Career {
-  id: string;
-  title: string;
-  titleHi: string;
-  category: string;
-  categoryHi: string;
-  shortDescription: string;
-  shortDescriptionHi: string;
-  fullDescription: string;
-  fullDescriptionHi: string;
-  isVocational: boolean;
-  matchScore?: number; // transparent rule score
-  matchExplanation?: string;
-  matchExplanationHi?: string;
-  whatTheyDo: { en: string; hi: string }[];
-  requiredSkills: { en: string; hi: string }[];
-  studyRoutes: { stage: string; stageHi: string; description: string; descriptionHi: string }[];
-  coursesExams: { en: string; hi: string }[];
-  vocationalTraining: { en: string; hi: string }[];
-  indicativeSalary: string;
-  indicativeSalaryHi: string;
-  growthPotential: string;
-  growthPotentialHi: string;
-  pathwaySteps: PathwayStep[];
-  matchedInterests: string[];
-  icon: string;
-}
-
-export type OpportunityCategory = 
-  | 'scholarship' 
-  | 'scheme' 
-  | 'course' 
-  | 'vocational' 
-  | 'apprenticeship' 
-  | 'internship' 
-  | 'mentorship';
-
-export interface Opportunity {
-  id: string;
-  name: string;
-  nameHi: string;
-  provider: string;
-  providerHi: string;
-  category: OpportunityCategory;
-  categoryLabel: { en: string; hi: string };
-  eligibilitySummary: string;
-  eligibilitySummaryHi: string;
-  requiredQualifications: string;
-  requiredQualificationsHi: string;
-  deadline: string;
-  deadlineHi: string;
-  sourceLink: string;
-  lastVerifiedDate: string;
-  isSampleData: boolean;
-  matchReason: string;
-  matchReasonHi: string;
-  stateCoverage: string;
-  financialBenefit?: string;
-  financialBenefitHi?: string;
-}
+export { TAG_LABELS } from '../services/engine';
 
 export interface FacilitatorRecommendation {
   id: string;
@@ -115,9 +66,9 @@ export interface FacilitatorRecommendation {
 }
 
 export interface DiscoveryAnswers {
-  activities: string[];
+  activities?: string[];
   workPreference: string[]; // 'problem-solving', 'helping-people', 'creating', 'outdoors', 'repairing'
-  subjects: string[];
+  subjects?: string[];
   workDomain: string[]; // 'technology', 'people', 'nature', 'machines', 'art', 'business'
   careerType: 'academic' | 'vocational' | 'both';
 }

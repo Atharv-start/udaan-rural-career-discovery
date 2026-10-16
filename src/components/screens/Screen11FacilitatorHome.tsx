@@ -8,7 +8,7 @@ import {
   M3BottomNavBar, 
   AndroidStatusBar 
 } from '../common/MaterialComponents';
-import { CAREERS_DATA } from '../../data/careersData';
+import { CAREERS_DATA } from '../../services/recommendationEngine';
 import { 
   Users, 
   Search, 
@@ -212,7 +212,7 @@ export const Screen11FacilitatorHome: React.FC = () => {
                         {language === 'hi' ? 'लक्ष्य करियर:' : 'Target:'}
                       </span>
                       <span className="font-bold text-[#202B27] truncate">
-                        {language === 'hi' ? targetCareerObj.titleHi : targetCareerObj.title}
+                        {language === 'hi' ? targetCareerObj.nameHi : targetCareerObj.nameEn}
                       </span>
                     </div>
                   )}

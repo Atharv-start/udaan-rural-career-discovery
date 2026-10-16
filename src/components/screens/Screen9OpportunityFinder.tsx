@@ -1,65 +1,126 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
-import { 
-  M3TopAppBar, 
-  M3Button, 
-  M3Card, 
-  M3FilterChip, 
-  M3BottomNavBar, 
-  AndroidStatusBar 
+import {
+  M3TopAppBar,
+  M3Button,
+  M3Card,
+  M3FilterChip,
+  M3BottomNavBar,
+  AndroidStatusBar
 } from '../common/MaterialComponents';
-import { OPPORTUNITIES_DATA } from '../../data/opportunitiesData';
-import { OpportunityCategory, Opportunity } from '../../types';
-import { 
-  Search, 
-  Bookmark, 
-  BookmarkCheck, 
-  ExternalLink, 
-  Calendar, 
-  ShieldCheck, 
-  CheckCircle2, 
-  IndianRupee, 
+import { EvaluatedOpp, OppStatus, Opportunity } from '../../types';
+import {
+  Search,
+  Bookmark,
+  BookmarkCheck,
+  ExternalLink,
+  Calendar,
+  ShieldCheck,
+  CheckCircle2,
+  AlertCircle,
+  Clock,
   Filter,
-  X
+  X,
+  AlertTriangle,
+  Info
 } from 'lucide-react';
 
-const CATEGORIES: { id: 'all' | OpportunityCategory; labelEn: string; labelHi: string }[] = [
-  { id: 'all', labelEn: 'All Opportunities', labelHi: 'सभी अवसर' },
-  { id: 'scholarship', labelEn: 'Scholarships', labelHi: 'छात्रवृत्तियां' },
-  { id: 'scheme', labelEn: 'Govt Schemes', labelHi: 'सरकारी योजनाएं' },
-  { id: 'vocational', labelEn: 'Vocational Training', labelHi: 'कौशल प्रशिक्षण' },
-  { id: 'apprenticeship', labelEn: 'Apprenticeships (NAPS)', labelHi: 'अप्रेंटिसशिप (सवेतन)' },
-  { id: 'course', labelEn: 'Free Courses', labelHi: 'निःशुल्क कोर्स' },
-  { id: 'mentorship', labelEn: 'Mentorship & Grants', labelHi: 'मेंटरशिप व ग्रांट' }
-];
-
 export const Screen9OpportunityFinder: React.FC = () => {
-  const { 
-    language, 
-    bookmarkedOpportunityIds, 
-    toggleBookmark, 
-    navigateTo 
+  const {
+    language,
+    evaluatedOpportunities,
+    bookmarkedOpportunityIds,
+    toggleBookmark,
+    navigateTo
   } = useApp();
 
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState<'all' | OpportunityCategory>('all');
+  const [selectedFilter, setSelectedFilter] = useState<'all' | OppStatus | 'scholarship' | 'apprenticeship' | 'skill_training' | 'training_seat'>('all');
   const [onlyBookmarks, setOnlyBookmarks] = useState(false);
-  const [selectedOpportunityModal, setSelectedOpportunityModal] = useState<Opportunity | null>(null);
+  const [selectedModal, setSelectedModal] = useState<EvaluatedOpp | null>(null);
 
-  // Filter opportunities
-  const filtered = OPPORTUNITIES_DATA.filter(item => {
-    if (onlyBookmarks && !bookmarkedOpportunityIds.includes(item.id)) {
+  const getStatusBadge = (status: OppStatus) => {
+    switch (status) {
+      case 'ELIGIBLE_NOW':
+        return {
+          en: 'Eligible Now',
+          hi: 'अभी पात्र',
+          className: 'bg-[#DDF3E8] text-[#176B5B] border-[#21866F]/30'
+        };
+      case 'CONDITIONAL':
+        return {
+          en: 'Eligible with Conditions',
+          hi: 'शर्तों के साथ पात्र',
+          className: 'bg-[#FFF9E6] text-[#8a6011] border-[#F2B544]/40'
+        };
+      case 'ALMOST_ELIGIBLE':
+        return {
+          en: 'Almost Eligible',
+          hi: 'लगभग पात्र',
+          className: 'bg-blue-50 text-blue-800 border-blue-200'
+        };
+      case 'WINDOW_CLOSED':
+        return {
+          en: 'Window Closed',
+          hi: 'आवेदन खिड़की बंद',
+          className: 'bg-gray-100 text-gray-700 border-gray-300'
+        };
+      case 'UPCOMING':
+        return {
+          en: 'Upcoming / Unannounced',
+          hi: 'आगामी / अप्रकाशित',
+          className: 'bg-purple-50 text-purple-800 border-purple-200'
+        };
+      case 'NOT_ELIGIBLE':
+      default:
+        return {
+          en: 'Not Eligible',
+          hi: 'अपात्र',
+          className: 'bg-red-50 text-red-800 border-red-200'
+        };
+    }
+  };
+
+  const getTypeLabel = (type: string) => {
+    switch (type) {
+      case 'scholarship':
+        return { en: 'Scholarship', hi: 'छात्रवृत्ति' };
+      case 'apprenticeship':
+        return { en: 'Apprenticeship (NAPS)', hi: 'शिक्षुता (NAPS)' };
+      case 'training_seat':
+        return { en: 'Training Seat', hi: 'प्रशिक्षण सीट' };
+      case 'skill_training':
+        return { en: 'Skill Training', hi: 'कौशल प्रशिक्षण' };
+      default:
+        return { en: type, hi: type };
+    }
+  };
+
+  // Filter evaluated opportunities
+  const filtered = evaluatedOpportunities.filter(item => {
+    if (onlyBookmarks && !bookmarkedOpportunityIds.includes(item.opp.id)) {
       return false;
     }
-    if (selectedCategory !== 'all' && item.category !== selectedCategory) {
-      return false;
+    if (selectedFilter !== 'all') {
+      if (
+        selectedFilter === 'ELIGIBLE_NOW' ||
+        selectedFilter === 'CONDITIONAL' ||
+        selectedFilter === 'ALMOST_ELIGIBLE' ||
+        selectedFilter === 'WINDOW_CLOSED' ||
+        selectedFilter === 'UPCOMING' ||
+        selectedFilter === 'NOT_ELIGIBLE'
+      ) {
+        if (item.status !== selectedFilter) return false;
+      } else {
+        if (item.opp.type !== selectedFilter) return false;
+      }
     }
     if (searchQuery.trim() !== '') {
       const q = searchQuery.toLowerCase();
-      const matchName = item.name.toLowerCase().includes(q) || item.nameHi.includes(q);
-      const matchProvider = item.provider.toLowerCase().includes(q) || item.providerHi.includes(q);
-      const matchElig = item.eligibilitySummary.toLowerCase().includes(q);
-      return matchName || matchProvider || matchElig;
+      const matchName = item.opp.nameEn.toLowerCase().includes(q) || item.opp.nameHi.includes(q);
+      const matchNotes = item.opp.notes.toLowerCase().includes(q);
+      const matchConditions = item.opp.conditions.some(c => c.toLowerCase().includes(q));
+      return matchName || matchNotes || matchConditions;
     }
     return true;
   });
@@ -69,13 +130,13 @@ export const Screen9OpportunityFinder: React.FC = () => {
       <AndroidStatusBar />
       <M3TopAppBar
         title={language === 'hi' ? 'अवसर एवं छात्रवृत्तियां' : 'Opportunity Finder'}
-        subtitle={language === 'hi' ? 'सत्यापित योजनाएं एवं सहायता' : 'Verified Schemes & Grants'}
+        subtitle={language === 'hi' ? 'सत्यापित योजनाएं एवं पात्रता' : 'Verified Schemes & Eligibility'}
         showBack={true}
         onBack={() => navigateTo('student_home')}
         readAloudText={
           language === 'hi'
-            ? 'अवसर खोजें। छात्रवृत्तियां, कौशल प्रशिक्षण और सरकारी योजनाएं। किसी भी कार्ड को बुकमार्क कर सकते हैं।'
-            : 'Find verified scholarships, government schemes, free courses, and apprenticeships.'
+            ? 'अवसर खोजें। सरकारी योजनाएं, छात्रवृत्ति और अप्रेंटिसशिप। अपनी पात्रता स्थिति देखें।'
+            : 'Find verified government schemes, scholarships, and apprenticeships. Check your eligibility status.'
         }
       />
 
@@ -86,7 +147,7 @@ export const Screen9OpportunityFinder: React.FC = () => {
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder={language === 'hi' ? 'योजना, छात्रवृत्ति या संस्था खोजें...' : 'Search scheme, scholarship or trade...'}
+            placeholder={language === 'hi' ? 'योजना या छात्रवृत्ति खोजें...' : 'Search scheme, scholarship or portal...'}
             className="w-full min-h-[46px] pl-10 pr-9 py-2.5 rounded-2xl bg-white border border-[#21866F]/20 text-xs sm:text-sm font-medium text-[#202B27] focus:outline-none focus:border-[#21866F] shadow-xs"
           />
           <Search className="absolute left-3.5 top-3.5 w-4 h-4 text-[#65736C]" />
@@ -100,7 +161,7 @@ export const Screen9OpportunityFinder: React.FC = () => {
           )}
         </div>
 
-        {/* Filter Chips Bar (Horizontal Scrollable) */}
+        {/* Filter Chips Bar */}
         <div className="flex items-center gap-2 overflow-x-auto pb-1 pt-1 no-scrollbar">
           {/* Bookmarks toggle chip */}
           <M3FilterChip
@@ -110,29 +171,71 @@ export const Screen9OpportunityFinder: React.FC = () => {
             count={bookmarkedOpportunityIds.length}
           />
 
-          {CATEGORIES.map(cat => (
-            <M3FilterChip
-              key={cat.id}
-              label={language === 'hi' ? cat.labelHi : cat.labelEn}
-              selected={!onlyBookmarks && selectedCategory === cat.id}
-              onClick={() => {
-                setOnlyBookmarks(false);
-                setSelectedCategory(cat.id);
-              }}
-            />
-          ))}
+          <M3FilterChip
+            label={language === 'hi' ? 'सभी अवसर' : 'All'}
+            selected={!onlyBookmarks && selectedFilter === 'all'}
+            onClick={() => {
+              setOnlyBookmarks(false);
+              setSelectedFilter('all');
+            }}
+          />
+
+          <M3FilterChip
+            label={language === 'hi' ? 'अभी पात्र (Eligible)' : 'Eligible Now'}
+            selected={!onlyBookmarks && selectedFilter === 'ELIGIBLE_NOW'}
+            onClick={() => {
+              setOnlyBookmarks(false);
+              setSelectedFilter('ELIGIBLE_NOW');
+            }}
+          />
+
+          <M3FilterChip
+            label={language === 'hi' ? 'शर्तों सहित (Conditional)' : 'Conditional'}
+            selected={!onlyBookmarks && selectedFilter === 'CONDITIONAL'}
+            onClick={() => {
+              setOnlyBookmarks(false);
+              setSelectedFilter('CONDITIONAL');
+            }}
+          />
+
+          <M3FilterChip
+            label={language === 'hi' ? 'लगभग पात्र (Almost)' : 'Almost Eligible'}
+            selected={!onlyBookmarks && selectedFilter === 'ALMOST_ELIGIBLE'}
+            onClick={() => {
+              setOnlyBookmarks(false);
+              setSelectedFilter('ALMOST_ELIGIBLE');
+            }}
+          />
+
+          <M3FilterChip
+            label={language === 'hi' ? 'छात्रवृत्तियां' : 'Scholarships'}
+            selected={!onlyBookmarks && selectedFilter === 'scholarship'}
+            onClick={() => {
+              setOnlyBookmarks(false);
+              setSelectedFilter('scholarship');
+            }}
+          />
+
+          <M3FilterChip
+            label={language === 'hi' ? 'शिक्षुता (Apprenticeship)' : 'Apprenticeship'}
+            selected={!onlyBookmarks && selectedFilter === 'apprenticeship'}
+            onClick={() => {
+              setOnlyBookmarks(false);
+              setSelectedFilter('apprenticeship');
+            }}
+          />
         </div>
 
         {/* Results Count & Verified Badge */}
         <div className="flex items-center justify-between text-xs px-1 text-[#65736C]">
           <span>
-            {language === 'hi' 
-              ? `${filtered.length} अवसर उपलब्ध` 
-              : `${filtered.length} opportunities found`}
+            {language === 'hi'
+              ? `${filtered.length} योजनाएं सूचीबद्ध`
+              : `${filtered.length} schemes evaluated`}
           </span>
           <div className="flex items-center gap-1 text-[#176B5B] font-semibold text-[11px]">
             <ShieldCheck className="w-3.5 h-3.5" />
-            <span>{language === 'hi' ? 'आधिकारिक स्रोत सत्यापित' : 'Govt. Verified'}</span>
+            <span>{language === 'hi' ? 'सत्यापित नियम इंजन' : 'Rule-Engine Evaluated'}</span>
           </div>
         </div>
 
@@ -145,12 +248,12 @@ export const Screen9OpportunityFinder: React.FC = () => {
                 {language === 'hi' ? 'कोई योजना नहीं मिली' : 'No matching opportunities found'}
               </p>
               <p className="text-xs text-[#65736C] mt-1">
-                {language === 'hi' ? 'खोज शब्द बदलकर देखें या सभी फ़िल्टर हटाएं' : 'Try adjusting filters or search term.'}
+                {language === 'hi' ? 'फ़िल्टर बदलकर देखें' : 'Try adjusting your filters.'}
               </p>
               <button
                 onClick={() => {
                   setSearchQuery('');
-                  setSelectedCategory('all');
+                  setSelectedFilter('all');
                   setOnlyBookmarks(false);
                 }}
                 className="mt-3 text-xs font-bold text-[#176B5B] hover:underline"
@@ -159,31 +262,32 @@ export const Screen9OpportunityFinder: React.FC = () => {
               </button>
             </div>
           ) : (
-            filtered.map(opp => {
+            filtered.map((item: EvaluatedOpp) => {
+              const opp = item.opp;
               const isBookmarked = bookmarkedOpportunityIds.includes(opp.id);
+              const statusBadge = getStatusBadge(item.status);
+              const typeLabel = getTypeLabel(opp.type);
+              const isClosedOrUpcoming = item.status === 'WINDOW_CLOSED' || item.status === 'UPCOMING';
 
               return (
                 <M3Card key={opp.id} className="p-4 border border-[#21866F]/15 hover:border-[#21866F]/35 transition-all">
-                  {/* Category & Verified tag */}
-                  <div className="flex items-center justify-between gap-2 mb-1.5">
-                    <div className="flex items-center gap-2">
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-[#176B5B] bg-[#DDF3E8] px-2.5 py-0.5 rounded-full">
-                        {language === 'hi' ? opp.categoryLabel.hi : opp.categoryLabel.en}
+                  {/* Status Badge & Bookmark Button */}
+                  <div className="flex items-center justify-between gap-2 mb-2">
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <span className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full border ${statusBadge.className}`}>
+                        {language === 'hi' ? statusBadge.hi : statusBadge.en}
                       </span>
-                      {opp.financialBenefit && (
-                        <span className="text-[10px] font-bold text-[#202B27] bg-[#F2B544]/25 px-2 py-0.5 rounded-full">
-                          {language === 'hi' ? opp.financialBenefitHi : opp.financialBenefit}
-                        </span>
-                      )}
+                      <span className="text-[10px] font-semibold text-[#176B5B] bg-[#DDF3E8] px-2 py-0.5 rounded-full">
+                        {language === 'hi' ? typeLabel.hi : typeLabel.en}
+                      </span>
                     </div>
 
-                    {/* Bookmark action button */}
                     <button
                       type="button"
                       onClick={() => toggleBookmark(opp.id)}
-                      className={`min-h-[40px] min-w-[40px] -mr-2 rounded-full flex items-center justify-center transition-all ${
-                        isBookmarked 
-                          ? 'text-[#F2B544]' 
+                      className={`min-h-[36px] min-w-[36px] -mr-1 rounded-full flex items-center justify-center transition-all ${
+                        isBookmarked
+                          ? 'text-[#F2B544]'
                           : 'text-[#65736C] hover:text-[#176B5B]'
                       }`}
                       aria-label="Bookmark this opportunity"
@@ -196,38 +300,62 @@ export const Screen9OpportunityFinder: React.FC = () => {
                     </button>
                   </div>
 
-                  {/* Title & Provider */}
+                  {/* Title */}
                   <h3 className="text-sm sm:text-base font-bold text-[#202B27] leading-snug">
-                    {language === 'hi' ? opp.nameHi : opp.name}
+                    {language === 'hi' ? opp.nameHi : opp.nameEn}
                   </h3>
 
-                  <p className="text-[11px] text-[#176B5B] font-medium mt-0.5">
-                    {language === 'hi' ? opp.providerHi : opp.provider}
-                  </p>
+                  {/* Verification Caveat if not verified */}
+                  {item.caveat && (
+                    <div className="mt-2 p-2 rounded-lg bg-[#FFF9E6] border border-[#F2B544]/30 text-[11px] text-[#8a6011] flex items-start gap-1.5">
+                      <AlertTriangle className="w-3.5 h-3.5 text-[#F2B544] shrink-0 mt-0.5" />
+                      <span>{language === 'hi' ? item.caveat.hi : item.caveat.en}</span>
+                    </div>
+                  )}
 
-                  {/* Eligibility summary */}
-                  <p className="text-xs text-[#65736C] mt-2 line-clamp-2 leading-relaxed">
-                    <span className="font-semibold text-[#202B27]">
-                      {language === 'hi' ? 'पात्रता: ' : 'Eligibility: '}
-                    </span>
-                    {language === 'hi' ? opp.eligibilitySummaryHi : opp.eligibilitySummary}
-                  </p>
+                  {/* Window Closed / Upcoming Cycle Note */}
+                  {isClosedOrUpcoming && opp.nextCycleNote && (
+                    <div className="mt-2 p-2.5 rounded-xl bg-gray-50 border border-gray-200 text-xs text-gray-700 space-y-1">
+                      <div className="flex items-center gap-1 font-semibold text-[11px] text-[#202B27]">
+                        <Clock className="w-3.5 h-3.5 text-gray-500" />
+                        <span>{language === 'hi' ? 'अगला चक्र / संभावित समय:' : 'Next Expected Cycle:'}</span>
+                      </div>
+                      <p className="text-[11px] leading-relaxed">
+                        {opp.nextCycleNote}
+                      </p>
+                    </div>
+                  )}
 
-                  {/* Why it matches */}
-                  <div className="mt-2.5 p-2 rounded-xl bg-[#FAF8F1] border border-[#21866F]/10 text-[11px] text-[#202B27] flex items-start gap-1.5">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-[#21866F] shrink-0 mt-0.5" />
-                    <span>{language === 'hi' ? opp.matchReasonHi : opp.matchReason}</span>
-                  </div>
+                  {/* Missing criteria or conditions */}
+                  {item.missing.length > 0 && !isClosedOrUpcoming && (
+                    <div className="mt-2.5 p-2 rounded-xl bg-[#FAF8F1] border border-[#21866F]/10 text-xs text-[#202B27] space-y-1">
+                      <span className="font-semibold text-[#176B5B] block text-[11px]">
+                        {item.status === 'CONDITIONAL'
+                          ? (language === 'hi' ? 'पात्रता शर्तें:' : 'Required Conditions:')
+                          : (language === 'hi' ? 'पात्र होने के लिए आवश्यक कदम:' : 'Steps to Qualify:')}
+                      </span>
+                      {item.missing.map((m, idx) => (
+                        <div key={idx} className="flex items-start gap-1.5 text-[11px]">
+                          <CheckCircle2 className="w-3 h-3 text-[#21866F] shrink-0 mt-0.5" />
+                          <span>{language === 'hi' ? m.hi : m.en}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
 
-                  {/* Footer with deadline and source */}
+                  {/* Footer with deadline and modal trigger */}
                   <div className="mt-3 pt-2 border-t border-[#21866F]/10 flex items-center justify-between text-xs">
                     <div className="flex items-center gap-1 text-[#65736C] text-[11px]">
                       <Calendar className="w-3.5 h-3.5" />
-                      <span>{language === 'hi' ? `अंतिम तिथि: ${opp.deadlineHi}` : `Deadline: ${opp.deadline}`}</span>
+                      <span>
+                        {opp.closesOn
+                          ? (language === 'hi' ? `अंतिम तिथि: ${opp.closesOn}` : `Closes: ${opp.closesOn}`)
+                          : (language === 'hi' ? `स्थिति: ${opp.windowStatus}` : `Window: ${opp.windowStatus}`)}
+                      </span>
                     </div>
 
                     <button
-                      onClick={() => setSelectedOpportunityModal(opp)}
+                      onClick={() => setSelectedModal(item)}
                       className="text-xs font-bold text-[#176B5B] hover:underline flex items-center gap-1"
                     >
                       <span>{language === 'hi' ? 'पूर्ण विवरण' : 'View Details'}</span>
@@ -241,75 +369,88 @@ export const Screen9OpportunityFinder: React.FC = () => {
       </main>
 
       {/* Opportunity Details Dialog Modal */}
-      {selectedOpportunityModal && (
+      {selectedModal && (
         <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4 animate-fade-in">
           <div className="bg-white w-full max-w-lg rounded-t-3xl sm:rounded-3xl p-5 max-h-[85vh] overflow-y-auto shadow-2xl border border-[#21866F]/20">
             <div className="flex items-start justify-between gap-3 mb-2">
               <div>
-                <span className="text-[10px] font-bold uppercase tracking-wider text-[#176B5B] bg-[#DDF3E8] px-2.5 py-0.5 rounded-full">
-                  {language === 'hi' ? selectedOpportunityModal.categoryLabel.hi : selectedOpportunityModal.categoryLabel.en}
-                </span>
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <span className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full border ${getStatusBadge(selectedModal.status).className}`}>
+                    {language === 'hi' ? getStatusBadge(selectedModal.status).hi : getStatusBadge(selectedModal.status).en}
+                  </span>
+                  <span className="text-[10px] font-semibold text-[#176B5B] bg-[#DDF3E8] px-2 py-0.5 rounded-full">
+                    {language === 'hi' ? getTypeLabel(selectedModal.opp.type).hi : getTypeLabel(selectedModal.opp.type).en}
+                  </span>
+                </div>
                 <h3 className="text-base sm:text-lg font-bold text-[#202B27] mt-1.5 leading-snug">
-                  {language === 'hi' ? selectedOpportunityModal.nameHi : selectedOpportunityModal.name}
+                  {language === 'hi' ? selectedModal.opp.nameHi : selectedModal.opp.nameEn}
                 </h3>
-                <p className="text-xs text-[#176B5B] font-medium">
-                  {language === 'hi' ? selectedOpportunityModal.providerHi : selectedOpportunityModal.provider}
-                </p>
               </div>
               <button
-                onClick={() => setSelectedOpportunityModal(null)}
+                onClick={() => setSelectedModal(null)}
                 className="w-8 h-8 rounded-full bg-[#FAF8F1] flex items-center justify-center text-[#65736C] hover:bg-gray-200 shrink-0"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
-            <div className="space-y-3.5 text-xs sm:text-sm mt-3 pt-3 border-t border-[#21866F]/10">
-              <div>
-                <span className="font-bold text-[#202B27] block text-xs uppercase text-[#65736C]">
-                  {language === 'hi' ? 'वित्तीय लाभ / सहायता' : 'Financial Benefit / Stipend'}
-                </span>
-                <p className="text-[#176B5B] font-bold text-base mt-0.5">
-                  {language === 'hi' ? selectedOpportunityModal.financialBenefitHi : selectedOpportunityModal.financialBenefit}
-                </p>
-              </div>
+            <div className="space-y-3 text-xs sm:text-sm mt-3 pt-3 border-t border-[#21866F]/10">
+              {/* Not fully verified caveat */}
+              {selectedModal.caveat && (
+                <div className="p-2.5 rounded-xl bg-[#FFF9E6] border border-[#F2B544]/40 text-xs text-[#8a6011] flex items-start gap-2">
+                  <AlertTriangle className="w-4 h-4 text-[#F2B544] shrink-0 mt-0.5" />
+                  <p className="leading-relaxed">
+                    {language === 'hi' ? selectedModal.caveat.hi : selectedModal.caveat.en}
+                  </p>
+                </div>
+              )}
 
-              <div>
-                <span className="font-bold text-[#202B27] block text-xs uppercase text-[#65736C]">
-                  {language === 'hi' ? 'पात्रता एवं शर्तें' : 'Eligibility Criteria'}
-                </span>
-                <p className="text-[#202B27] mt-0.5 leading-relaxed">
-                  {language === 'hi' ? selectedOpportunityModal.eligibilitySummaryHi : selectedOpportunityModal.eligibilitySummary}
-                </p>
-              </div>
+              {/* Next cycle note for closed or upcoming */}
+              {(selectedModal.status === 'WINDOW_CLOSED' || selectedModal.status === 'UPCOMING') && selectedModal.opp.nextCycleNote && (
+                <div className="p-3 rounded-xl bg-gray-50 border border-gray-200 text-xs text-gray-700">
+                  <span className="font-bold text-[#202B27] block mb-1">
+                    {language === 'hi' ? 'अगला आवेदन चक्र / संभावित सूचना:' : 'Next Cycle Schedule Note:'}
+                  </span>
+                  <p className="leading-relaxed">
+                    {selectedModal.opp.nextCycleNote}
+                  </p>
+                </div>
+              )}
 
-              <div>
-                <span className="font-bold text-[#202B27] block text-xs uppercase text-[#65736C]">
-                  {language === 'hi' ? 'आवश्यक योग्यता' : 'Required Qualifications'}
-                </span>
-                <p className="text-[#202B27] mt-0.5 leading-relaxed">
-                  {language === 'hi' ? selectedOpportunityModal.requiredQualificationsHi : selectedOpportunityModal.requiredQualifications}
-                </p>
-              </div>
+              {/* Conditions / Missing criteria */}
+              {selectedModal.missing.length > 0 && (
+                <div>
+                  <span className="font-bold text-[#202B27] block text-xs uppercase text-[#65736C]">
+                    {selectedModal.status === 'CONDITIONAL'
+                      ? (language === 'hi' ? 'शर्तें एवं आवश्यकताएं' : 'Eligibility Conditions')
+                      : (language === 'hi' ? 'पात्रता आवश्यकताएं' : 'Requirements to Qualify')}
+                  </span>
+                  <ul className="mt-1 space-y-1">
+                    {selectedModal.missing.map((m, i) => (
+                      <li key={i} className="flex items-start gap-1.5 text-[#202B27]">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-[#21866F] shrink-0 mt-0.5" />
+                        <span>{language === 'hi' ? m.hi : m.en}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
 
+              {/* Notes & Verification */}
               <div className="p-3 rounded-xl bg-[#FAF8F1] border border-[#21866F]/12">
                 <span className="font-bold text-[#176B5B] block text-xs">
-                  {language === 'hi' ? 'आधिकारिक स्रोत एवं सत्यापन' : 'Verification & Source'}
+                  {language === 'hi' ? 'सत्यापन विवरण एवं टिप्पणी' : 'Verification Status & Notes'}
                 </span>
-                <p className="text-xs text-[#65736C] mt-0.5">
-                  {language === 'hi' 
-                    ? `अंतिम सत्यापन: ${selectedOpportunityModal.lastVerifiedDate} · आधिकारिक राष्ट्रीय पोर्टल`
-                    : `Verified: ${selectedOpportunityModal.lastVerifiedDate} · Official Portal`}
+                <p className="text-xs text-[#65736C] mt-1 leading-relaxed">
+                  {selectedModal.opp.notes}
                 </p>
-                <a
-                  href={selectedOpportunityModal.sourceLink}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="mt-2 text-xs font-bold text-[#176B5B] hover:underline inline-flex items-center gap-1.5"
-                >
-                  <span>{selectedOpportunityModal.sourceLink}</span>
-                  <ExternalLink className="w-3.5 h-3.5" />
-                </a>
+                <div className="flex items-center justify-between mt-2 pt-2 border-t border-[#21866F]/10 text-[11px] text-[#65736C]">
+                  <span>
+                    {language === 'hi'
+                      ? `सत्यापन: ${selectedModal.opp.verifiedDate} (${selectedModal.opp.status})`
+                      : `Verified: ${selectedModal.opp.verifiedDate} (${selectedModal.opp.status})`}
+                  </span>
+                </div>
               </div>
             </div>
 
@@ -317,26 +458,37 @@ export const Screen9OpportunityFinder: React.FC = () => {
               <M3Button
                 variant="outlined"
                 onClick={() => {
-                  toggleBookmark(selectedOpportunityModal.id);
+                  toggleBookmark(selectedModal.opp.id);
                 }}
                 icon={<Bookmark className="w-4 h-4" />}
                 className="flex-1"
               >
-                {bookmarkedOpportunityIds.includes(selectedOpportunityModal.id)
+                {bookmarkedOpportunityIds.includes(selectedModal.opp.id)
                   ? (language === 'hi' ? 'सहेजा गया' : 'Bookmarked')
                   : (language === 'hi' ? 'बुकमार्क करें' : 'Bookmark')}
               </M3Button>
 
-              <M3Button
-                variant="filled"
-                onClick={() => {
-                  window.open(selectedOpportunityModal.sourceLink, '_blank');
-                }}
-                icon={<ExternalLink className="w-4 h-4" />}
-                className="flex-1"
-              >
-                {language === 'hi' ? 'पोर्टल पर जाएं' : 'Open Portal'}
-              </M3Button>
+              {/* Open portal CTA - disabled or indicated for closed/upcoming schemes */}
+              {selectedModal.opp.link ? (
+                <M3Button
+                  variant="filled"
+                  onClick={() => {
+                    window.open(selectedModal.opp.link, '_blank');
+                  }}
+                  icon={<ExternalLink className="w-4 h-4" />}
+                  className="flex-1"
+                >
+                  {selectedModal.status === 'WINDOW_CLOSED'
+                    ? (language === 'hi' ? 'पोर्टल देखें (बंद)' : 'Portal (Closed)')
+                    : selectedModal.status === 'UPCOMING'
+                    ? (language === 'hi' ? 'पोर्टल देखें' : 'View Portal')
+                    : (language === 'hi' ? 'पोर्टल पर जाएं' : 'Open Portal')}
+                </M3Button>
+              ) : (
+                <div className="flex-1 text-center py-2 px-3 rounded-xl bg-gray-100 text-gray-500 text-xs font-semibold">
+                  {language === 'hi' ? 'आधिकारिक पोर्टल जल्द' : 'Portal Not Yet Live'}
+                </div>
+              )}
             </div>
           </div>
         </div>

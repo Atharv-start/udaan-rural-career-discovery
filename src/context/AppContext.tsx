@@ -1,17 +1,22 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { 
-  Language, 
-  UserRole, 
-  StudentProfile, 
-  Opportunity, 
-  FacilitatorRecommendation, 
-  DiscoveryAnswers, 
-  Career 
+import {
+  Language,
+  UserRole,
+  StudentProfile,
+  Opportunity,
+  FacilitatorRecommendation,
+  DiscoveryAnswers,
+  Career,
+  RankedCareer,
+  EvaluatedOpp
 } from '../types';
 import { SAMPLE_STUDENTS_ROSTER } from '../data/studentsData';
-import { CAREERS_DATA } from '../data/careersData';
-import { OPPORTUNITIES_DATA } from '../data/opportunitiesData';
-import { TransparentRecommendationEngine } from '../services/recommendationEngine';
+import {
+  CAREERS_DATA,
+  OPPORTUNITIES_DATA,
+  TransparentRecommendationEngine,
+  getEvaluatedOpportunities
+} from '../services/recommendationEngine';
 import { speechService } from '../services/speechService';
 
 export type ScreenId = 
@@ -57,10 +62,13 @@ interface AppContextType {
   discoveryAnswers: DiscoveryAnswers | null;
   setDiscoveryAnswers: (answers: DiscoveryAnswers | null) => void;
   recommendedCareers: Career[];
+  rankedCareers: RankedCareer[];
+  insufficientSignal: boolean;
 
   // Opportunities
   bookmarkedOpportunityIds: string[];
   toggleBookmark: (oppId: string) => void;
+  evaluatedOpportunities: EvaluatedOpp[];
 
   // Offline & System
   isOffline: boolean;
@@ -98,10 +106,10 @@ const DEFAULT_STUDENT: StudentProfile = {
   careerAspiration: 'Solar technician or electrical workshop',
   deviceAccess: 'own-smartphone',
   createdAt: '2026-10-10',
-  bookmarkedOpportunityIds: ['opp-nmms', 'opp-naps-apprenticeship'],
+  bookmarkedOpportunityIds: ['up_post_matric_scholarship', 'naps'],
   completedMilestones: ['step-1'],
   currentMilestoneId: 'step-2',
-  targetCareerId: 'solar-technician'
+  targetCareerId: 'iti_solar_technician'
 };
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -149,12 +157,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   });
 
   const [selectedStudentId, setSelectedStudentId] = useState<string | null>('std-101');
-  const [selectedCareerId, setSelectedCareerId] = useState<string | null>('solar-technician');
+  const [selectedCareerId, setSelectedCareerId] = useState<string | null>('iti_solar_technician');
   const [discoveryAnswers, setDiscoveryAnswers] = useState<DiscoveryAnswers | null>(null);
 
   const [bookmarkedOpportunityIds, setBookmarkedOpportunityIds] = useState<string[]>(() => {
     const saved = localStorage.getItem('udaan_bookmarks');
-    return saved ? JSON.parse(saved) : ['opp-nmms', 'opp-naps-apprenticeship'];
+    return saved ? JSON.parse(saved) : ['up_post_matric_scholarship', 'naps'];
   });
 
   const [facilitatorRecommendations, setFacilitatorRecommendations] = useState<FacilitatorRecommendation[]>(() => {
@@ -163,10 +171,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       {
         id: 'rec-1',
         studentId: 'std-101',
-        opportunityId: 'opp-tata-trusts-grant',
-        opportunityName: 'Tata Trusts Rural Education & Healthcare Grants',
+        opportunityId: 'up_post_matric_scholarship',
+        opportunityName: 'UP Post-Matric Scholarship (Dashmottar) - covers ITI',
         facilitatorName: 'Shri Anand Kumar (DIET Mentor)',
-        note: 'Aarti shows exceptional interest in village healthcare. Please help her fill the offline grant form by next Tuesday.',
+        note: 'Aarti shows exceptional interest in skilling. Please help her fill the scholarship form by next Tuesday.',
         date: '12 Oct 2026',
         isOfflineSaved: true
       }
@@ -288,7 +296,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setRoleState('student');
     setCurrentStudent(DEFAULT_STUDENT);
     setStudentRoster(SAMPLE_STUDENTS_ROSTER);
-    setBookmarkedOpportunityIds(['opp-nmms', 'opp-naps-apprenticeship']);
+    setBookmarkedOpportunityIds(['up_post_matric_scholarship', 'naps']);
     setCurrentScreen('language_selection');
     setNavigationHistory([]);
     showSnackbar('All demo data cleared and reset to fresh state');
@@ -300,6 +308,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     discoveryAnswers || undefined
   );
   const recommendedCareers = recommendationOutput.careers;
+  const rankedCareers = recommendationOutput.rankedCareers;
+  const insufficientSignal = recommendationOutput.insufficientSignal;
+  const evaluatedOpportunities = getEvaluatedOpportunities(
+    currentStudent,
+    discoveryAnswers || undefined
+  );
 
   return (
     <AppContext.Provider
@@ -324,6 +338,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         discoveryAnswers,
         setDiscoveryAnswers,
         recommendedCareers,
+        rankedCareers,
+        insufficientSignal,
+        evaluatedOpportunities,
         bookmarkedOpportunityIds,
         toggleBookmark,
         isOffline,

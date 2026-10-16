@@ -24,16 +24,17 @@ import {
   Scissors,
   Droplets,
   Building,
+  Zap,
   HelpCircle
 } from 'lucide-react';
-import { Career } from '../../types';
+import { Career, RankedCareer } from '../../types';
 
 export const Screen4StudentHome: React.FC = () => {
-  const { 
-    language, 
-    currentStudent, 
-    recommendedCareers, 
-    navigateTo, 
+  const {
+    language,
+    currentStudent,
+    rankedCareers,
+    navigateTo,
     setSelectedCareerId,
     isOffline,
     lastSyncTime,
@@ -52,16 +53,18 @@ export const Screen4StudentHome: React.FC = () => {
   const displayName = currentStudent.name || (language === 'hi' ? 'विद्यार्थी' : 'Student');
 
   // Map career icons to Lucide components
-  const getCareerIcon = (iconName: string) => {
-    switch (iconName) {
-      case 'Sun': return Sun;
-      case 'Sprout': return Sprout;
-      case 'Radio': return Radio;
-      case 'HeartPulse': return HeartPulse;
-      case 'Monitor': return Monitor;
-      case 'Wrench': return Wrench;
-      case 'Scissors': return Scissors;
-      case 'Droplets': return Droplets;
+  const getTradeIcon = (tradeId: string) => {
+    switch (tradeId) {
+      case 'iti_solar_technician': return Sun;
+      case 'iti_wireman': return Zap;
+      case 'iti_plumber': return Droplets;
+      case 'iti_mason': return Building;
+      case 'iti_dress_making': return Scissors;
+      case 'iti_copa': return Monitor;
+      case 'iti_cosmetology': return Sparkles;
+      case 'iti_welder':
+      case 'iti_mech_diesel':
+      case 'iti_mech_two_three_wheeler':
       default: return Wrench;
     }
   };
@@ -224,8 +227,13 @@ export const Screen4StudentHome: React.FC = () => {
           </div>
 
           <div className="space-y-3">
-            {recommendedCareers.slice(0, 3).map((career, index) => {
-              const IconComponent = getCareerIcon(career.icon);
+            {rankedCareers.slice(0, 3).map((rc, index) => {
+              const career = rc.career;
+              const IconComponent = getTradeIcon(career.id);
+              const matchReasonText = rc.matched[0]
+                ? (language === 'hi' ? rc.matched[0].text.hi : rc.matched[0].text.en)
+                : (language === 'hi' ? `कक्षा ${career.minClass} की पात्रता पर आधारित` : `Eligible based on Class ${career.minClass}`);
+
               return (
                 <M3Card
                   key={career.id}
@@ -240,29 +248,31 @@ export const Screen4StudentHome: React.FC = () => {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-0.5">
                         <span className="text-[10px] font-bold text-[#176B5B] uppercase tracking-wider">
-                          {language === 'hi' ? career.categoryHi : career.category}
+                          {language === 'hi' ? 'आईटीआई ट्रेड' : 'ITI Trade'}
                         </span>
-                        {career.isVocational && (
-                          <span className="text-[10px] font-semibold text-[#202B27] bg-[#F2B544]/30 px-1.5 py-0.2 rounded">
-                            {language === 'hi' ? 'व्यावहारिक हुनर' : 'Vocational'}
-                          </span>
-                        )}
+                        <span className="text-[10px] font-semibold text-[#202B27] bg-[#F2B544]/30 px-1.5 py-0.2 rounded">
+                          {language === 'hi' ? `${career.durationMonths} माह` : `${career.durationMonths} mo`}
+                        </span>
                       </div>
 
                       <h4 className="text-sm sm:text-base font-bold text-[#202B27] leading-snug">
-                        {language === 'hi' ? career.titleHi : career.title}
+                        {language === 'hi' ? career.nameHi : career.nameEn}
                       </h4>
 
-                      <p className="text-xs text-[#65736C] line-clamp-2 mt-1 leading-relaxed">
-                        {language === 'hi' ? career.shortDescriptionHi : career.shortDescription}
-                      </p>
+                      <div className="flex items-center gap-2 mt-1 text-xs text-[#65736C]">
+                        <span className="font-semibold text-[#176B5B]">
+                          {language === 'hi' ? `${rc.matched.length} खूबियों से मेल` : `Matched ${rc.matched.length} strengths`}
+                        </span>
+                        <span>·</span>
+                        <span>{language === 'hi' ? `कक्षा ${career.minClass} पास` : `Class ${career.minClass}`}</span>
+                      </div>
 
                       {/* Transparent Match Reason */}
                       <div className="mt-2.5 pt-2 border-t border-[#21866F]/10 flex items-center justify-between text-[11px]">
                         <span className="text-[#176B5B] font-medium flex items-center gap-1 truncate max-w-[80%]">
                           <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
                           <span className="truncate">
-                            {language === 'hi' ? career.matchExplanationHi : career.matchExplanation}
+                            {matchReasonText}
                           </span>
                         </span>
                         <ArrowRight className="w-4 h-4 text-[#176B5B] shrink-0" />

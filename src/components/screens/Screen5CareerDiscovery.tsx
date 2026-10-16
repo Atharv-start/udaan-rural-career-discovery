@@ -200,6 +200,25 @@ export const Screen5CareerDiscovery: React.FC = () => {
             })}
           </div>
 
+          {/* Academic pathway notice if selected */}
+          {q.field === 'careerType' && answers.careerType === 'academic' && (
+            <div className="mt-3 p-3 rounded-xl bg-[#FFF9E6] border border-[#F2B544]/40 text-xs text-[#8a6011]">
+              <div className="flex items-start gap-2">
+                <HelpCircle className="w-4 h-4 text-[#F2B544] shrink-0 mt-0.5" />
+                <div>
+                  <span className="font-bold block">
+                    {language === 'hi' ? 'सूचना:' : 'Notice:'}
+                  </span>
+                  <p className="mt-0.5 leading-relaxed">
+                    {language === 'hi'
+                      ? 'वर्तमान सत्यापित कैटलॉग केवल व्यावसायिक आईटीआई ट्रेडों को कवर करता है। शैक्षणिक उच्च-शिक्षा मार्ग भविष्य के अपडेट में जोड़े जाएंगे।'
+                      : 'The current verified catalog covers vocational ITI trades only. Academic higher-education paths will be added in future updates.'}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Optional Open Text Feedback */}
           {currentStep === QUESTIONS.length - 1 && (
             <div className="mt-5 pt-4 border-t border-[#21866F]/15">

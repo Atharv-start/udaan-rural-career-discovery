@@ -1,0 +1,252 @@
+[
+ {
+  "id": "iti_welder",
+  "nameEn": "Welder",
+  "nameHi": "वेल्डर",
+  "category": "iti_trade",
+  "minClass": 8,
+  "durationMonths": 12,
+  "relocation": "unknown",
+  "stateScope": "national",
+  "pathway": [
+   "Pass class 8",
+   "Apply for ITI admission (in UP: admissionscvtup.in; UP domicile and merit apply)",
+   "Complete the 12-month Welder trade course",
+   "Take the trade test for the National Trade Certificate, then look for an apprenticeship (NAPS) or a job"
+  ],
+  "tags": {
+   "hands_on": 3,
+   "stable_income": 2,
+   "earn_while_learning": 1
+  },
+  "sourceUrl": "https://www.dgt.gov.in/sites/default/files/2024-12/NSQF%20Level%20Change%20Letter_04122024%20%283%29.pdf",
+  "verifiedDate": "2026-10-16",
+  "status": "verified",
+  "notes": "min_class, duration_months from DGT letter dated 4 Dec 2024, Annexure I serial 87, NSQF 2.5, applies from session 2024-25. UP seats and institute availability not confirmed. needs_relocation and tags are judgment, not from source. cost_band unknown. nco_code not looked up. pathway steps are the generic ITI route; the trade-test/NTC step comes from a secondary source."
+ },
+ {
+  "id": "iti_plumber",
+  "nameEn": "Plumber",
+  "nameHi": "प्लंबर",
+  "category": "iti_trade",
+  "minClass": 8,
+  "durationMonths": 12,
+  "relocation": "unknown",
+  "stateScope": "national",
+  "pathway": [
+   "Pass class 8",
+   "Apply for ITI admission (in UP: admissionscvtup.in; UP domicile and merit apply)",
+   "Complete the 12-month Plumber trade course",
+   "Take the trade test for the National Trade Certificate, then look for an apprenticeship (NAPS) or a job"
+  ],
+  "tags": {
+   "hands_on": 3,
+   "business": 2,
+   "stable_income": 1
+  },
+  "sourceUrl": "https://www.dgt.gov.in/sites/default/files/2024-12/NSQF%20Level%20Change%20Letter_04122024%20%283%29.pdf",
+  "verifiedDate": "2026-10-16",
+  "status": "verified",
+  "notes": "min_class, duration_months from DGT letter dated 4 Dec 2024, Annexure I serial 82, NSQF 2.5, applies from session 2024-25. UP seats and institute availability not confirmed. needs_relocation and tags are judgment, not from source. cost_band unknown. nco_code not looked up. pathway steps are the generic ITI route; the trade-test/NTC step comes from a secondary source."
+ },
+ {
+  "id": "iti_wireman",
+  "nameEn": "Wireman",
+  "nameHi": "वायरमैन",
+  "category": "iti_trade",
+  "minClass": 8,
+  "durationMonths": 24,
+  "relocation": "unknown",
+  "stateScope": "national",
+  "pathway": [
+   "Pass class 8",
+   "Apply for ITI admission (in UP: admissionscvtup.in; UP domicile and merit apply)",
+   "Complete the 24-month Wireman trade course",
+   "Take the trade test for the National Trade Certificate, then look for an apprenticeship (NAPS) or a job"
+  ],
+  "tags": {
+   "hands_on": 3,
+   "tech": 2,
+   "stable_income": 2
+  },
+  "sourceUrl": "https://www.dgt.gov.in/sites/default/files/2024-12/NSQF%20Level%20Change%20Letter_04122024%20%283%29.pdf",
+  "verifiedDate": "2026-10-16",
+  "status": "verified",
+  "notes": "min_class, duration_months from DGT letter dated 4 Dec 2024, Annexure I serial 94, NSQF 3, applies from session 2024-25. UP seats and institute availability not confirmed. needs_relocation and tags are judgment, not from source. cost_band unknown. nco_code not looked up. pathway steps are the generic ITI route; the trade-test/NTC step comes from a secondary source."
+ },
+ {
+  "id": "iti_mason",
+  "nameEn": "Mason (Building Constructor)",
+  "nameHi": "राजमिस्त्री (बिल्डिंग कंस्ट्रक्टर)",
+  "category": "iti_trade",
+  "minClass": 8,
+  "durationMonths": 12,
+  "relocation": "unknown",
+  "stateScope": "national",
+  "pathway": [
+   "Pass class 8",
+   "Apply for ITI admission (in UP: admissionscvtup.in; UP domicile and merit apply)",
+   "Complete the 12-month Mason (Building Constructor) trade course",
+   "Take the trade test for the National Trade Certificate, then look for an apprenticeship (NAPS) or a job"
+  ],
+  "tags": {
+   "hands_on": 3,
+   "outdoors": 3,
+   "business": 1
+  },
+  "sourceUrl": "https://www.dgt.gov.in/sites/default/files/2024-12/NSQF%20Level%20Change%20Letter_04122024%20%283%29.pdf",
+  "verifiedDate": "2026-10-16",
+  "status": "verified",
+  "notes": "min_class, duration_months from DGT letter dated 4 Dec 2024, Annexure I serial 81, NSQF 2.5, applies from session 2024-25. UP seats and institute availability not confirmed. needs_relocation and tags are judgment, not from source. cost_band unknown. nco_code not looked up. pathway steps are the generic ITI route; the trade-test/NTC step comes from a secondary source."
+ },
+ {
+  "id": "iti_dress_making",
+  "nameEn": "Dress Making",
+  "nameHi": "ड्रेस मेकिंग (सिलाई-कटाई)",
+  "category": "iti_trade",
+  "minClass": 8,
+  "durationMonths": 12,
+  "relocation": "unknown",
+  "stateScope": "national",
+  "pathway": [
+   "Pass class 8",
+   "Apply for ITI admission (in UP: admissionscvtup.in; UP domicile and merit apply)",
+   "Complete the 12-month Dress Making trade course",
+   "Take the trade test for the National Trade Certificate, then look for an apprenticeship (NAPS) or a job"
+  ],
+  "tags": {
+   "creative": 3,
+   "hands_on": 2,
+   "business": 2
+  },
+  "sourceUrl": "https://www.dgt.gov.in/sites/default/files/2024-12/NSQF%20Level%20Change%20Letter_04122024%20%283%29.pdf",
+  "verifiedDate": "2026-10-16",
+  "status": "verified",
+  "notes": "min_class, duration_months from DGT letter dated 4 Dec 2024, Annexure I serial 78, NSQF 2.5, applies from session 2024-25. UP seats and institute availability not confirmed. needs_relocation and tags are judgment, not from source. cost_band unknown. nco_code not looked up. pathway steps are the generic ITI route; the trade-test/NTC step comes from a secondary source."
+ },
+ {
+  "id": "iti_copa",
+  "nameEn": "Computer Operator and Programming Assistant (COPA)",
+  "nameHi": "कंप्यूटर ऑपरेटर एवं प्रोग्रामिंग असिस्टेंट (COPA)",
+  "category": "iti_trade",
+  "minClass": 10,
+  "durationMonths": 12,
+  "relocation": "unknown",
+  "stateScope": "national",
+  "pathway": [
+   "Pass class 10",
+   "Apply for ITI admission (in UP: admissionscvtup.in; UP domicile and merit apply)",
+   "Complete the 12-month Computer Operator and Programming Assistant (COPA) trade course",
+   "Take the trade test for the National Trade Certificate, then look for an apprenticeship (NAPS) or a job"
+  ],
+  "tags": {
+   "tech": 3,
+   "numbers": 1,
+   "stable_income": 2
+  },
+  "sourceUrl": "https://www.dgt.gov.in/sites/default/files/2024-12/NSQF%20Level%20Change%20Letter_04122024%20%283%29.pdf",
+  "verifiedDate": "2026-10-16",
+  "status": "verified",
+  "notes": "min_class, duration_months from DGT letter dated 4 Dec 2024, Annexure I serial 7, NSQF 3.5, applies from session 2024-25. UP seats and institute availability not confirmed. needs_relocation and tags are judgment, not from source. cost_band unknown. nco_code not looked up. pathway steps are the generic ITI route; the trade-test/NTC step comes from a secondary source."
+ },
+ {
+  "id": "iti_solar_technician",
+  "nameEn": "Solar Technician (Electrical)",
+  "nameHi": "सोलर टेक्नीशियन (इलेक्ट्रिकल)",
+  "category": "iti_trade",
+  "minClass": 10,
+  "durationMonths": 12,
+  "relocation": "unknown",
+  "stateScope": "national",
+  "pathway": [
+   "Pass class 10",
+   "Apply for ITI admission (in UP: admissionscvtup.in; UP domicile and merit apply)",
+   "Complete the 12-month Solar Technician (Electrical) trade course",
+   "Take the trade test for the National Trade Certificate, then look for an apprenticeship (NAPS) or a job"
+  ],
+  "tags": {
+   "hands_on": 2,
+   "tech": 3,
+   "outdoors": 2
+  },
+  "sourceUrl": "https://www.dgt.gov.in/sites/default/files/2024-12/NSQF%20Level%20Change%20Letter_04122024%20%283%29.pdf",
+  "verifiedDate": "2026-10-16",
+  "status": "verified",
+  "notes": "min_class, duration_months from DGT letter dated 4 Dec 2024, Annexure I serial 60, NSQF 3.5, applies from session 2024-25. UP seats and institute availability not confirmed. needs_relocation and tags are judgment, not from source. cost_band unknown. nco_code not looked up. pathway steps are the generic ITI route; the trade-test/NTC step comes from a secondary source."
+ },
+ {
+  "id": "iti_mech_diesel",
+  "nameEn": "Mechanic Diesel",
+  "nameHi": "मैकेनिक डीज़ल",
+  "category": "iti_trade",
+  "minClass": 10,
+  "durationMonths": 12,
+  "relocation": "unknown",
+  "stateScope": "national",
+  "pathway": [
+   "Pass class 10",
+   "Apply for ITI admission (in UP: admissionscvtup.in; UP domicile and merit apply)",
+   "Complete the 12-month Mechanic Diesel trade course",
+   "Take the trade test for the National Trade Certificate, then look for an apprenticeship (NAPS) or a job"
+  ],
+  "tags": {
+   "hands_on": 3,
+   "tech": 2,
+   "stable_income": 2
+  },
+  "sourceUrl": "https://www.dgt.gov.in/sites/default/files/2024-12/NSQF%20Level%20Change%20Letter_04122024%20%283%29.pdf",
+  "verifiedDate": "2026-10-16",
+  "status": "verified",
+  "notes": "min_class, duration_months from DGT letter dated 4 Dec 2024, Annexure I serial 47, NSQF 3.5, applies from session 2024-25. UP seats and institute availability not confirmed. needs_relocation and tags are judgment, not from source. cost_band unknown. nco_code not looked up. pathway steps are the generic ITI route; the trade-test/NTC step comes from a secondary source."
+ },
+ {
+  "id": "iti_mech_two_three_wheeler",
+  "nameEn": "Mechanic Two and Three Wheeler",
+  "nameHi": "मैकेनिक टू एंड थ्री व्हीलर",
+  "category": "iti_trade",
+  "minClass": 10,
+  "durationMonths": 12,
+  "relocation": "unknown",
+  "stateScope": "national",
+  "pathway": [
+   "Pass class 10",
+   "Apply for ITI admission (in UP: admissionscvtup.in; UP domicile and merit apply)",
+   "Complete the 12-month Mechanic Two and Three Wheeler trade course",
+   "Take the trade test for the National Trade Certificate, then look for an apprenticeship (NAPS) or a job"
+  ],
+  "tags": {
+   "hands_on": 3,
+   "tech": 2,
+   "business": 2
+  },
+  "sourceUrl": "https://www.dgt.gov.in/sites/default/files/2024-12/NSQF%20Level%20Change%20Letter_04122024%20%283%29.pdf",
+  "verifiedDate": "2026-10-16",
+  "status": "verified",
+  "notes": "min_class, duration_months from DGT letter dated 4 Dec 2024, Annexure I serial 50, NSQF 3.5, applies from session 2024-25. UP seats and institute availability not confirmed. needs_relocation and tags are judgment, not from source. cost_band unknown. nco_code not looked up. pathway steps are the generic ITI route; the trade-test/NTC step comes from a secondary source."
+ },
+ {
+  "id": "iti_cosmetology",
+  "nameEn": "Cosmetology",
+  "nameHi": "कॉस्मेटोलॉजी (सौंदर्य उपचार)",
+  "category": "iti_trade",
+  "minClass": 10,
+  "durationMonths": 12,
+  "relocation": "unknown",
+  "stateScope": "national",
+  "pathway": [
+   "Pass class 10",
+   "Apply for ITI admission (in UP: admissionscvtup.in; UP domicile and merit apply)",
+   "Complete the 12-month Cosmetology trade course",
+   "Take the trade test for the National Trade Certificate, then look for an apprenticeship (NAPS) or a job"
+  ],
+  "tags": {
+   "people": 3,
+   "creative": 2,
+   "business": 2
+  },
+  "sourceUrl": "https://www.dgt.gov.in/sites/default/files/2024-12/NSQF%20Level%20Change%20Letter_04122024%20%283%29.pdf",
+  "verifiedDate": "2026-10-16",
+  "status": "verified",
+  "notes": "min_class, duration_months from DGT letter dated 4 Dec 2024, Annexure I serial 9, NSQF 3.5, applies from session 2024-25. UP seats and institute availability not confirmed. needs_relocation and tags are judgment, not from source. cost_band unknown. nco_code not looked up. pathway steps are the generic ITI route; the trade-test/NTC step comes from a secondary source."
+ }
+]

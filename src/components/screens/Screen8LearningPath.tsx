@@ -1,34 +1,29 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
-import { 
-  M3TopAppBar, 
-  M3Button, 
-  M3Card, 
-  M3BottomNavBar, 
-  AndroidStatusBar 
+import {
+  M3TopAppBar,
+  M3Button,
+  M3Card,
+  M3BottomNavBar,
+  AndroidStatusBar
 } from '../common/MaterialComponents';
-import { CAREERS_DATA } from '../../data/careersData';
-import { 
-  CheckCircle2, 
-  Clock, 
-  PlayCircle, 
-  BookOpen, 
-  Award, 
-  Briefcase, 
-  Sparkles, 
-  Compass, 
+import { CAREERS_DATA } from '../../services/recommendationEngine';
+import {
+  CheckCircle2,
+  Clock,
+  PlayCircle,
+  BookOpen,
   ChevronRight,
   ExternalLink
 } from 'lucide-react';
 
 export const Screen8LearningPath: React.FC = () => {
-  const { 
-    language, 
-    currentStudent, 
-    updateStudentProfile, 
-    showSnackbar, 
-    navigateTo, 
-    setSelectedCareerId 
+  const {
+    language,
+    currentStudent,
+    showSnackbar,
+    navigateTo,
+    setSelectedCareerId
   } = useApp();
 
   const targetCareer = CAREERS_DATA.find(c => c.id === currentStudent.targetCareerId) || CAREERS_DATA[0];
@@ -43,8 +38,8 @@ export const Screen8LearningPath: React.FC = () => {
       const isDone = prev.includes(stepNum);
       const updated = isDone ? prev.filter(s => s !== stepNum) : [...prev, stepNum];
       showSnackbar(
-        isDone 
-          ? (language === 'hi' ? 'चरण पुनः प्रगति में' : 'Step marked as in progress') 
+        isDone
+          ? (language === 'hi' ? 'चरण पुनः प्रगति में' : 'Step marked as in progress')
           : (language === 'hi' ? 'शाबाश! चरण पूर्ण चिह्नित किया गया' : 'Great job! Step marked as completed')
       );
       return updated;
@@ -58,13 +53,13 @@ export const Screen8LearningPath: React.FC = () => {
       <AndroidStatusBar />
       <M3TopAppBar
         title={language === 'hi' ? 'मेरा सीखने का मार्ग' : 'My Learning Path'}
-        subtitle={language === 'hi' ? targetCareer.titleHi : targetCareer.title}
+        subtitle={language === 'hi' ? targetCareer.nameHi : targetCareer.nameEn}
         showBack={true}
         onBack={() => navigateTo('student_home')}
         readAloudText={
           language === 'hi'
-            ? `आपका लक्ष्य: ${targetCareer.titleHi}। 4 चरण देखें। पूरा होने पर टिक लगाएं।`
-            : `Your target career: ${targetCareer.title}. Review 4 milestone stages.`
+            ? `आपका लक्ष्य: ${targetCareer.nameHi}। 4 चरण देखें। पूरा होने पर टिक लगाएं।`
+            : `Your target career: ${targetCareer.nameEn}. Review 4 milestone stages.`
         }
       />
 
@@ -74,14 +69,14 @@ export const Screen8LearningPath: React.FC = () => {
           <div className="flex items-center justify-between">
             <div>
               <span className="text-[10px] font-bold uppercase tracking-wider text-[#F2B544] bg-black/20 px-2.5 py-0.5 rounded-full">
-                {language === 'hi' ? 'लक्ष्य आजीविका' : 'Target Livelihood'}
+                {language === 'hi' ? 'लक्ष्य आईटीआई ट्रेड' : 'Target ITI Trade'}
               </span>
               <h2 className="text-lg font-bold mt-1 text-white leading-tight">
-                {language === 'hi' ? targetCareer.titleHi : targetCareer.title}
+                {language === 'hi' ? targetCareer.nameHi : targetCareer.nameEn}
               </h2>
               <p className="text-xs text-[#DDF3E8] mt-0.5">
-                {language === 'hi' 
-                  ? `प्रगति: ${completedSteps.length} / 4 चरण पूरे हुए` 
+                {language === 'hi'
+                  ? `प्रगति: ${completedSteps.length} / 4 चरण पूरे हुए`
                   : `Progress: ${completedSteps.length} of 4 steps completed`}
               </p>
             </div>
@@ -99,7 +94,7 @@ export const Screen8LearningPath: React.FC = () => {
 
           {/* Progress bar */}
           <div className="w-full bg-black/20 h-2 rounded-full overflow-hidden mt-3">
-            <div 
+            <div
               className="bg-[#F2B544] h-full rounded-full transition-all duration-300"
               style={{ width: `${(completedSteps.length / 4) * 100}%` }}
             />
@@ -108,9 +103,10 @@ export const Screen8LearningPath: React.FC = () => {
 
         {/* Vertical Timeline */}
         <div className="space-y-4 relative before:absolute before:left-5 before:top-4 before:bottom-4 before:w-0.5 before:bg-[#21866F]/25">
-          {targetCareer.pathwaySteps.map((step) => {
-            const isCompleted = completedSteps.includes(step.step);
-            const isCurrent = step.step === currentActiveStep && !isCompleted;
+          {targetCareer.pathway.map((stepText, idx) => {
+            const stepNum = idx + 1;
+            const isCompleted = completedSteps.includes(stepNum);
+            const isCurrent = stepNum === currentActiveStep && !isCompleted;
 
             let statusLabelEn = 'Upcoming';
             let statusLabelHi = 'आगामी चरण';
@@ -127,15 +123,15 @@ export const Screen8LearningPath: React.FC = () => {
             }
 
             return (
-              <div key={step.step} className="relative flex items-start gap-4 pl-1">
+              <div key={stepNum} className="relative flex items-start gap-4 pl-1">
                 {/* Node icon */}
                 <button
                   type="button"
-                  onClick={() => toggleStepCompletion(step.step)}
+                  onClick={() => toggleStepCompletion(stepNum)}
                   title={isCompleted ? 'Mark incomplete' : 'Mark completed'}
                   className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 z-10 transition-all shadow-xs select-none ${
-                    isCompleted 
-                      ? 'bg-[#21866F] text-white ring-4 ring-white' 
+                    isCompleted
+                      ? 'bg-[#21866F] text-white ring-4 ring-white'
                       : isCurrent
                       ? 'bg-[#F2B544] text-[#202B27] ring-4 ring-white'
                       : 'bg-white text-[#65736C] border-2 border-[#21866F]/30 ring-4 ring-white'
@@ -146,14 +142,14 @@ export const Screen8LearningPath: React.FC = () => {
                   ) : isCurrent ? (
                     <PlayCircle className="w-5 h-5 stroke-[2.5]" />
                   ) : (
-                    <span className="text-xs font-bold">{step.step}</span>
+                    <span className="text-xs font-bold">{stepNum}</span>
                   )}
                 </button>
 
                 {/* Content Card */}
                 <M3Card className={`flex-1 p-4 border transition-all ${
-                  isCurrent 
-                    ? 'border-[#21866F] bg-white ring-2 ring-[#21866F]/10 shadow-md' 
+                  isCurrent
+                    ? 'border-[#21866F] bg-white ring-2 ring-[#21866F]/10 shadow-md'
                     : isCompleted
                     ? 'border-[#21866F]/20 bg-white/90'
                     : 'border-[#21866F]/15 bg-white/70'
@@ -164,38 +160,38 @@ export const Screen8LearningPath: React.FC = () => {
                     </span>
                     <span className="text-[10px] text-[#65736C] flex items-center gap-1">
                       <Clock className="w-3 h-3" />
-                      <span>{step.duration}</span>
+                      <span>{language === 'hi' ? `चरण ${stepNum}` : `Step ${stepNum}`}</span>
                     </span>
                   </div>
 
                   <h3 className="text-sm font-bold text-[#202B27] mt-1 leading-snug">
-                    {language === 'hi' ? step.titleHi : step.title}
+                    {language === 'hi' ? `कदम ${stepNum}: आधिकारिक प्रक्रिया` : `Milestone ${stepNum}: Official Pathway`}
                   </h3>
 
-                  <p className="text-xs text-[#65736C] mt-1 leading-relaxed">
-                    {language === 'hi' ? step.descriptionHi : step.description}
+                  <p className="text-xs text-[#202B27] mt-1 leading-relaxed">
+                    {stepText}
                   </p>
 
                   {/* Toggle completion action */}
                   <div className="mt-3 pt-2.5 border-t border-[#21866F]/10 flex items-center justify-between">
                     <button
                       type="button"
-                      onClick={() => toggleStepCompletion(step.step)}
+                      onClick={() => toggleStepCompletion(stepNum)}
                       className="text-xs font-semibold text-[#176B5B] hover:underline flex items-center gap-1"
                     >
                       <span>
-                        {isCompleted 
-                          ? (language === 'hi' ? 'पूर्ण से हटाएं' : 'Mark incomplete') 
+                        {isCompleted
+                          ? (language === 'hi' ? 'पूर्ण से हटाएं' : 'Mark incomplete')
                           : (language === 'hi' ? 'पूर्ण चिह्नित करें' : 'Mark as done')}
                       </span>
                     </button>
 
-                    {step.step === 3 && (
+                    {stepNum === 2 && (
                       <button
                         onClick={() => navigateTo('opportunity_finder')}
                         className="text-[11px] font-bold text-[#176B5B] bg-[#DDF3E8] px-2.5 py-1 rounded-full flex items-center gap-1 hover:bg-[#DDF3E8]/80"
                       >
-                        <span>{language === 'hi' ? 'कोर्स खोजें' : 'Find courses'}</span>
+                        <span>{language === 'hi' ? 'प्रवेश योजनाएं' : 'Admission Schemes'}</span>
                         <ChevronRight className="w-3 h-3" />
                       </button>
                     )}
@@ -216,14 +212,14 @@ export const Screen8LearningPath: React.FC = () => {
               </h4>
               <p className="text-xs text-[#202B27] mt-0.5 leading-relaxed">
                 {language === 'hi'
-                  ? 'सरकारी स्वयं (SWAYAM) और दीक्षा (DIKSHA) पोर्टल पर इस ट्रेड के वीडियो पाठ मुफ्त उपलब्ध हैं।'
-                  : 'Free high-quality video lectures and workbooks are available via SWAYAM and DIKSHA.'}
+                  ? 'सरकारी भारत स्किल्स (Bharat Skills) और डीजीटी पोर्टल पर इस ट्रेड के पाठ्यक्रम, ई-पुस्तकें और प्रश्न बैंक मुफ्त उपलब्ध हैं।'
+                  : 'Official curricula, e-books, and test questions for this trade are freely available via DGT Bharat Skills.'}
               </p>
               <button
                 onClick={() => navigateTo('opportunity_finder')}
                 className="mt-2 text-xs font-bold text-[#176B5B] hover:underline inline-flex items-center gap-1"
               >
-                <span>{language === 'hi' ? 'निःशुल्क कोर्स देखें' : 'Browse free online modules'}</span>
+                <span>{language === 'hi' ? 'संबंधित योजनाएं देखें' : 'View related schemes'}</span>
                 <ExternalLink className="w-3.5 h-3.5" />
               </button>
             </div>
